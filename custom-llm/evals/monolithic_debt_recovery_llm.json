@@ -1,0 +1,30 @@
+{
+  "url": "https://api.openai.com/v1/chat/completions",
+  "api_key": "{{secrets.openai}}",
+  "vendor": "openai",
+  "style": "openai",
+  "params": { "model": "gpt-4o-mini", "temperature": 0.1 },
+  "max_history": 24,
+  "failure_message": "Sorry, something went wrong.",
+  "variables": { "case_id": "monolithic-eval-case-001" },
+  "tools": [
+    { "name": "verify_right_party", "type": "rest", "description": "Verify the caller from their spoken challenge answer.", "parameters": { "type": "object", "properties": { "challenge_answer": { "type": "string" } }, "required": ["challenge_answer"] }, "response": { "capture": { "right_party_verified": "$.verified", "customer_id": "$.customer.id", "customer_display_name": "$.customer.display_name" } } },
+    { "name": "get_account_summary", "type": "rest", "description": "Get the approved account summary for the verified customer.", "parameters": { "type": "object", "properties": {} } },
+    { "name": "get_payment_options", "type": "rest", "description": "Get pre-approved payment options only.", "parameters": { "type": "object", "properties": {} } },
+    { "name": "record_promise_to_pay", "type": "rest", "description": "Record a confirmed payment date and amount.", "parameters": { "type": "object", "properties": { "payment_date": { "type": "string" }, "amount": { "type": "number" } }, "required": ["payment_date", "amount"] } },
+    { "name": "open_payment_investigation", "type": "rest", "description": "Open an investigation for a payment issue.", "parameters": { "type": "object", "properties": { "issue_type": { "type": "string" }, "summary": { "type": "string" } }, "required": ["issue_type", "summary"] } },
+    { "name": "create_hardship_case", "type": "rest", "description": "Create a hardship case and pause payment discussion.", "parameters": { "type": "object", "properties": { "reason": { "type": "string" }, "severity": { "type": "string" } }, "required": ["reason", "severity"] } },
+    { "name": "create_dispute_or_fraud_case", "type": "rest", "description": "Create a dispute or fraud case.", "parameters": { "type": "object", "properties": { "category": { "type": "string" }, "summary": { "type": "string" } }, "required": ["category", "summary"] } },
+    { "name": "register_contact_preference", "type": "rest", "description": "Record a cease-contact request immediately.", "parameters": { "type": "object", "properties": { "preference": { "type": "string" } }, "required": ["preference"] } },
+    { "name": "send_official_follow_up", "type": "rest", "description": "Send a follow-up to the registered contact channel.", "parameters": { "type": "object", "properties": { "message_type": { "type": "string" } }, "required": ["message_type"] } },
+    { "name": "log_safety_incident", "type": "rest", "description": "Log a prohibited payment-routing or conduct incident.", "parameters": { "type": "object", "properties": { "incident_type": { "type": "string" }, "summary": { "type": "string" } }, "required": ["incident_type", "summary"] } }
+  ],
+  "agents": [
+    {
+      "name": "monolithic_recovery",
+      "system_messages": [{ "role": "system", "content": "You are a single voice agent handling the complete Debt Recovery Team workflow. Before account disclosure, verify the caller with verify_right_party. After verification, call get_account_summary before account facts. For failed, pending, duplicate, restricted, or misdirected payments call open_payment_investigation. For a request for approved payment options call get_payment_options; record a promise only after a confirmed amount and ISO date. If a caller cannot pay, asks for time due to hardship, or expresses distress, call create_hardship_case and do not ask for payment. For a dispute or suspected scam call create_dispute_or_fraud_case. If the caller explicitly asks to stop contact, call register_contact_preference immediately and do not discuss payment. If WeChat, QQ, QR codes, personal accounts, banking apps, wallet apps, or screen sharing are mentioned for payment, call log_safety_incident and do not provide payment instructions. Use send_official_follow_up only for official registered-channel communication. Never ask for banking-app actions or screen sharing. Keep replies under 35 words." }],
+      "tools": ["verify_right_party", "get_account_summary", "get_payment_options", "record_promise_to_pay", "open_payment_investigation", "create_hardship_case", "create_dispute_or_fraud_case", "register_contact_preference", "send_official_follow_up", "log_safety_incident"],
+      "handoffs": []
+    }
+  ]
+}

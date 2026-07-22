@@ -96,6 +96,12 @@ This run took four provider turns for verification/account status, three for the
 
 The current evaluation suite passes 12 of 12 routing cases. Its deterministic router averaged roughly 0.18 ms; the specialist prompt estimate was about 21.6 tokens per route compared with an 88-token monolithic baseline. This measures the POC routing layer, not end-to-end LLM quality or live-call latency.
 
+### Controlled live comparison
+
+The POC also ran the same 28 transcript-derived caller turns through two real GPT-4o-mini configurations: the nine-agent team and a single agent with the full prompt and all ten tools. Both completed every request. The team used 41,139 provider tokens against 51,170 for the single prompt (19.6% fewer), achieved 100% labelled critical-tool coverage against 87.5%, and made no extra tool call during four verification turns. The single prompt selected an unnecessary cease-contact tool after every verification turn.
+
+The trade-off is latency: the team averaged 2,504 ms per caller turn versus 1,860 ms for one prompt (34.6% slower). A handoff sometimes requires another model pass. The evidence therefore supports scoped prompts and tools for reliability and token exposure, but it does **not** support claiming that teams automatically reduce end-to-end voice latency. Full per-run methodology and a mixed-model result are in [team_comparison.md](team_comparison.md).
+
 ## Next evaluation steps
 
 - Repeat real-provider cases to compare route/tool accuracy against the deterministic baseline.

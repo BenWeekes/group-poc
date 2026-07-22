@@ -164,7 +164,7 @@ export async function runTeamTurn(session, userText) {
     const agent = effectiveAgent(session, secrets);
     const tools = scopedFunctions(session, secrets);
     const messages = [...systemMessages(session, secrets), ...boundedHistory(session.history, agent.max_history)];
-    const toolChoice = agent.name === 'outbound_intake' && !session.variables.right_party_verified
+    const toolChoice = !session.variables.right_party_verified && tools.some((tool) => tool.function.name === 'verify_right_party')
       ? { type: 'function', function: { name: 'verify_right_party' } }
       : 'auto';
     const started = performance.now();

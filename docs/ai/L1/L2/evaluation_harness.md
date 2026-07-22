@@ -25,6 +25,12 @@ The real-provider evaluators send the full `debt_recovery_team_llm.json` fixture
 
 This reveals tool/prompt/handoff gaps that fixed replay alone can miss. Record selected agent, functions, handoff path, per-pass and per-turn latency, and actual provider usage. Never treat deterministic prompt estimates and actual provider token accounting as one measure.
 
+## Team versus single-prompt baseline
+
+`eval:compare` runs the same 28 replay turns through the team fixture and a one-agent fixture with the full prompt and all ten tools. The baseline is deliberately a single team-runtime agent so both variants use the same endpoint, tool service, SSE mode, session handling, and provider API. `TEAM_FORCE_ROOT_PROVIDER=true` removes agent-level provider overrides for an architecture-only run.
+
+`team_comparison.md` records both a mixed-provider run and a controlled GPT-4o-mini run. The controlled run used fewer team tokens and had higher labelled critical-tool coverage, but the team had higher per-turn latency. Treat it as reproducible POC evidence, not a production conclusion.
+
 ## See Also
 
 - [Workflows](../05_workflows.md)
