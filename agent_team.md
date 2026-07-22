@@ -6,7 +6,7 @@ Most voice agents use one large prompt and one large tool set for an entire call
 
 This proposal lets one Agora ConvoAI session operate as a **team of specialist LLM agents**. A caller starts with an entry agent and is transferred to the right specialist as the conversation changes. Context and structured state travel with the transfer, so the caller does not have to start over.
 
-Debt Recovery Team (DRT) is the working evaluation domain. It is deliberately demanding: a call can switch rapidly from payment questions to distress, a failed transaction, a dispute, or a request to stop contact. The team-of-agents mechanism itself is domain-neutral.
+The Debt Recovery Team is the working evaluation domain. It is deliberately demanding: a call can switch rapidly from payment questions to distress, a failed transaction, a dispute, or a request to stop contact. The team-of-agents mechanism itself is domain-neutral.
 
 ## Why use a team?
 
@@ -19,7 +19,7 @@ Debt Recovery Team (DRT) is the working evaluation domain. It is deliberately de
 | Safer boundaries | Cross-cutting routes such as cease-contact, distress, and suspicious payment instructions can interrupt the ordinary flow. |
 | Reusable pattern | The same configuration model can support sales, support, booking, healthcare, or other multi-specialist teams. |
 
-## DRT agent team
+## Debt Recovery Team agent team
 
 | Agent | Job | Tools it can use | Hand off when |
 | --- | --- | --- | --- |
@@ -63,7 +63,7 @@ The same call would take a different path if the caller said, “Send the accoun
 
 - Nine agents with scoped tools and explicit transfer criteria.
 - File-backed mock account data rather than a CRM or payment database.
-- Deterministic routing for the main DRT pathways.
+- Deterministic routing for the main Debt Recovery Team pathways.
 - Twelve English evaluation cases, including four inspired by the supplied call transcripts.
 - Evaluation output for pathway accuracy, route latency, and specialist-versus-monolithic prompt-token estimates.
 
@@ -74,4 +74,4 @@ The current evaluation suite passes 12 of 12 routing cases. Its deterministic ro
 - Run the same cases through a real upstream LLM and compare route/tool accuracy against the deterministic baseline.
 - Add multi-turn tests that verify state survives several transfers.
 - Measure end-to-end streaming latency and actual provider token usage.
-- Add equivalent non-DRT teams to demonstrate the proposed API across different Agora use cases.
+- Add equivalent teams in other domains to demonstrate the proposed API across different Agora use cases.
