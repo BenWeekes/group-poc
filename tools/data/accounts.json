@@ -1,0 +1,31 @@
+{
+  "accounts": [
+    {
+      "id": "acct-demo-001",
+      "phone": "+441632960123",
+      "display_name": "Alex Morgan",
+      "verification_answer": "blue harbour",
+      "status": "payment due",
+      "balance": 199.0,
+      "next_due_date": "2026-07-30",
+      "payment_status": "overdue",
+      "can_pay": true,
+      "approved_options": ["Pay 199.00 by 2026-07-30", "Pay 100.00 by 2026-07-25 and 99.00 by 2026-08-15"],
+      "contact_preference": "standard"
+    },
+    {
+      "id": "acct-demo-002",
+      "phone": "+441632960124",
+      "display_name": "Jordan Lee",
+      "verification_answer": "green bridge",
+      "status": "payment due",
+      "balance": 2089.0,
+      "next_due_date": "2026-07-25",
+      "payment_status": "overdue",
+      "can_pay": false,
+      "approved_options": [],
+      "contact_preference": "standard"
+    }
+  ],
+  "events": []
+}

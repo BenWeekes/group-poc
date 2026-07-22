@@ -1,0 +1,8 @@
+{
+  "name": "group-poc-tools",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": { "start": "node service.js", "test": "node --test test/*.test.js" },
+  "dependencies": { "express": "^4.21.2" }
+}

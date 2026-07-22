@@ -1,0 +1,113 @@
+# Developer API: multi-agent `llm` capability
+
+## Status and scope
+
+This document specifies a proposed extension to the Agora ConvoAI `llm` configuration. It is a POC contract, not a released Agora API. Existing single-agent payloads remain valid: omitting `llm.agents` retains current behaviour.
+
+The objective is to let a session enter through one agent, transfer between specialised agents without making the caller repeat context, and restrict each agent to the smallest tool set it needs.
+
+## Root configuration
+
+`llm` retains its normal provider configuration. Root properties are inherited by agents unless overridden.
+
+| Field | Meaning |
+| --- | --- |
+| `url`, `api_key`, `vendor`, `style` | Upstream LLM configuration. |
+| `params` | Deep-merged into each agent's `params`. |
+| `max_history` | Default message history for an agent. |
+| `greeting_message` | Spoken once by the entry agent at session start. |
+| `variables` | Flat session-variable store, readable as `{{vars.name}}`. |
+| `tools` | Tool library, defined once and named by agents. |
+| `agents` | Ordered agent definitions. `agents[0]` is the entry agent. |
+
+All properties other than `params` shallow-replace at agent level. An agent sees only the tools listed in `agent.tools`.
+
+## Agent definition
+
+```json
+{
+  "name": "payment_options",
+  "params": { "temperature": 0.1 },
+  "max_history": 20,
+  "requires": ["right_party_verified", "customer_id"],
+  "transition_message": null,
+  "system_messages": [{ "role": "system", "content": "..." }],
+  "tools": ["get_payment_options", "record_promise_to_pay"],
+  "handoffs": []
+}
+```
+
+`requires` blocks activation when a required variable is absent. `available_from: "*"` marks a global agent that any current agent may transfer to, such as cease-contact, safety, or human escalation.
+
+## Handoffs
+
+A handoff is exposed to the current LLM as a synthesized function. The caller experiences a `transition_message` only when one is configured. `context` controls how much recent conversation is passed; `capture` defines required values that are written into session variables atomically with the transfer.
+
+```json
+{
+  "to": "payment_options",
+  "description": "The caller offers a date or amount, or asks for an approved payment option.",
+  "context": { "mode": "user_and_assistant", "max_messages": 12 },
+  "capture": {
+    "type": "object",
+    "properties": {
+      "offered_amount": { "type": "number" },
+      "offered_date": { "type": "string" }
+    }
+  }
+}
+```
+
+The runtime must validate the capture schema before switching agents. It must reject a transfer when a required capture is missing or malformed.
+
+## Tool definition
+
+Tools use an OpenAI-compatible parameter schema plus REST request and response mappings. `response.capture` writes deterministic values to the session store; `response.return` is the concise result placed into the LLM context.
+
+```json
+{
+  "name": "get_payment_options",
+  "type": "rest",
+  "description": "Return approved options for a verified caller.",
+  "parameters": { "type": "object", "properties": {} },
+  "request": {
+    "method": "POST",
+    "url": "https://tool-service/v1/payment-options/quote",
+    "body": { "customer_id": "{{vars.customer_id}}" },
+    "timeout_ms": 4000
+  },
+  "response": {
+    "capture": { "requires_human_approval": "$.requires_human_approval" },
+    "return": "$.spoken_options",
+    "on_empty": "No automatic option is available."
+  }
+}
+```
+
+Only the tool service receives state-changing requests. The LLM never receives secrets, full payment information, or unrestricted network access.
+
+## Safety requirements
+
+The agent prompts are not the sole safety control. The Custom LLM runtime must deterministically intercept and route:
+
+- cease-contact and communication-preference requests;
+- severe distress or immediate-safety signals;
+- payment instructions over WeChat, QQ, SMS, QR codes, social media, or personal accounts;
+- requests for banking-app access, balances, screen sharing, or on-call device actions;
+- third-party disclosure and failed right-party verification.
+
+The platform must enforce outbound calling windows, contact-frequency limits, and dialling permissions before the LLM is invoked. Monetary amounts, dates, account references, and payment instructions heard in speech must be confirmed through an official written channel before state changes take effect.
+
+## Custom LLM compatibility
+
+For this POC, Agora calls an OpenAI-compatible endpoint at `/chat/completions`. The Custom LLM server accepts the existing request `Authorization: Bearer …` convention and forwards that bearer token to the configured upstream LLM, matching the existing `server-custom-llm` behaviour. The internal REST tool service is authenticated separately and is not internet-accessible.
+
+## Evaluation instrumentation
+
+Each turn records the selected agent, safety gate, tool calls, route latency, tool latency, and prompt-token estimate. The evaluator compares this specialist design with a single monolithic-prompt baseline. The comparison is diagnostic—not a claim of production model quality—and reports:
+
+- pathway accuracy and safety-gate coverage;
+- agent transitions and tool selection;
+- route/tool latency measured in the POC;
+- estimated prompt-token exposure per turn;
+- monolithic versus specialist prompt-size comparison.

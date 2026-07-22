@@ -1,0 +1,26 @@
+services:
+  tools:
+    build: ./tools
+    environment:
+      PORT: 8111
+      INTERNAL_TOOL_SECRET: ${INTERNAL_TOOL_SECRET:?set INTERNAL_TOOL_SECRET}
+    volumes:
+      - ./tools/data:/app/data
+    expose:
+      - "8111"
+    restart: unless-stopped
+
+  custom-llm:
+    build: ./custom-llm
+    environment:
+      PORT: 8110
+      TOOLS_BASE_URL: http://tools:8111
+      INTERNAL_TOOL_SECRET: ${INTERNAL_TOOL_SECRET:?set INTERNAL_TOOL_SECRET}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.openai.com/v1}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+    depends_on:
+      - tools
+    ports:
+      - "127.0.0.1:8110:8110"
+    restart: unless-stopped

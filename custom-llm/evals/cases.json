@@ -1,0 +1,10 @@
+[
+  { "name": "verify_right_party", "text": "blue harbour", "expected_agent": "outbound_intake", "expected_safety_gate": null },
+  { "name": "payment_options", "verified": true, "text": "I can pay 100 on 2026-07-25. What options do I have?", "expected_agent": "payment_options", "expected_safety_gate": null },
+  { "name": "failed_payment", "verified": true, "text": "My payment failed after I changed my card.", "expected_agent": "payment_troubleshooting", "expected_safety_gate": null },
+  { "name": "hardship", "verified": true, "text": "I cannot pay. I need more time because of financial pressure.", "expected_agent": "hardship_support", "expected_safety_gate": null },
+  { "name": "distress", "verified": true, "text": "I cannot sleep and I feel humiliated. I need support.", "expected_agent": "hardship_support", "expected_safety_gate": "distress" },
+  { "name": "cease_contact", "verified": true, "text": "Do not contact me again.", "expected_agent": "contact_preference", "expected_safety_gate": "cease_contact" },
+  { "name": "side_channel", "verified": true, "text": "Send the payment account to my WeChat.", "expected_agent": "safety_compliance", "expected_safety_gate": "side_channel" },
+  { "name": "fraud", "verified": true, "text": "This is not my loan. I think this is a scam.", "expected_agent": "dispute_fraud", "expected_safety_gate": null }
+]

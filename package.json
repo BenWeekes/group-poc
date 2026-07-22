@@ -1,0 +1,12 @@
+{
+  "name": "group-poc",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["custom-llm", "tools"],
+  "scripts": {
+    "start:llm": "npm --workspace custom-llm start",
+    "start:tools": "npm --workspace tools start",
+    "eval": "npm --workspace custom-llm run eval",
+    "test": "npm --workspace custom-llm test"
+  }
+}
