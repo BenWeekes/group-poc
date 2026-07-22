@@ -17,6 +17,7 @@ Debt recovery is the working evaluation domain because it produces realistic rou
 - `custom-llm/` — OpenAI-compatible Custom LLM proxy. It selects a specialist agent, scopes tools, applies deterministic policy routing, and delegates tool execution to the tool service.
 - `tools/` — local REST API with a JSON-file account store. It is private to the Docker network; it is never exposed through Nginx.
 - `custom-llm/evals/` — deterministic routes, transcript-derived long replays, and an independent LLM caller simulator.
+- [Curated evaluation conversations and observations](custom-llm/evals/important_runs.md)
 
 ## Deployment shape
 

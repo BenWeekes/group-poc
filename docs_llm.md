@@ -102,9 +102,9 @@ The platform must enforce outbound calling windows, contact-frequency limits, an
 
 ## Custom LLM compatibility
 
-For this POC, Agora calls an OpenAI-compatible endpoint at `/chat/completions`. To enable the team runtime, the request additionally supplies the fully populated `llm` object proposed in `agent_team_join.md`. The Custom LLM stores the active agent and variables by session context, resolves root/agent inheritance on every turn, renders `{{vars.*}}` and `{{secrets.*}}` templates, and rebuilds the selected agent's system prompt and allowed function schema after every handoff.
+For this POC, Agora calls an OpenAI-compatible endpoint at `/chat/completions` with `x-group-poc-api-key`. To enable the team runtime, the request additionally supplies the fully populated `llm` object proposed in `agent_team_join.md`. The Custom LLM stores the active agent and variables by session context, resolves root/agent inheritance on every turn, renders `{{vars.*}}` and `{{secrets.*}}` templates, and rebuilds the selected agent's system prompt and allowed function schema after every handoff. A unique `context.call_id` is required in a production integration; the POC expires inactive sessions after 30 minutes by default.
 
-`{{secrets.openai}}` and `{{secrets.xai}}` resolve only inside the Custom LLM process from its environment. They never enter model context, tool results, logs, or the response payload. Agent-level provider overrides can therefore use OpenAI or xAI while remaining inside one Agora session.
+`{{secrets.openai}}` and `{{secrets.xai}}` resolve only inside the Custom LLM process from its environment. They never enter model context, tool results, logs, or the response payload. Team provider URLs are allowlisted to the OpenAI and xAI chat-completions endpoints, preventing a caller-supplied configuration from sending resolved credentials elsewhere. Agent-level provider overrides can therefore use OpenAI or xAI while remaining inside one Agora session.
 
 The original request `Authorization: Bearer …` convention remains available as a fallback for a single-agent request, matching the existing `server-custom-llm` behaviour. The internal REST tool service is authenticated separately and is not internet-accessible.
 

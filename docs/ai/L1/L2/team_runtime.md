@@ -4,7 +4,7 @@
 
 ## Entry and session
 
-`POST /chat/completions` enters team mode when `body.llm.agents` is non-empty. `server.js` keys sessions by `context.appId`, `context.userId`, and `context.channel`. A first request starts with the first agent. Later requests replace the current config with the supplied complete `llm` object but retain active agent, variables, and history.
+`POST /chat/completions` enters team mode when `body.llm.agents` is non-empty. `server.js` keys sessions by `context.appId`, `context.userId`, `context.channel`, and optional `context.call_id`. A first request starts with the first agent. Later requests replace the current config with the supplied complete `llm` object but retain active agent, variables, and history. Sessions expire after `SESSION_TTL_MS`; callers should always provide a unique call ID.
 
 ## Agent resolution
 

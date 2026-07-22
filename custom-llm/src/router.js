@@ -26,4 +26,4 @@ export function routeTurn(session, text) {
 }
 
 export function estimateTokens(value) { return Math.ceil(String(value || '').length / 4); }
-export function extractOffer(text) { const amount = text.match(/(?:£|\$)?(\d+(?:\.\d{1,2})?)/); const date = text.match(/\b20\d{2}-\d{2}-\d{2}\b/); return { requested_amount: amount ? Number(amount[1]) : undefined, requested_date: date ? date[0] : undefined }; }
+export function extractOffer(text) { const amount = text.match(/(?:£|\$|\bpay(?:ment)?(?:\s+of)?|\bamount(?:\s+of)?)\s*(\d+(?:\.\d{1,2})?)/i); const date = text.match(/\b20\d{2}-\d{2}-\d{2}\b/); return { requested_amount: amount ? Number(amount[1]) : undefined, requested_date: date ? date[0] : undefined }; }

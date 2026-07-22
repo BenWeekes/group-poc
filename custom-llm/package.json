@@ -11,6 +11,10 @@
     "eval:simulated-caller": "node evals/simulated_caller_eval.js",
     "eval:compare": "node evals/compare_team_monolithic.js",
     "eval:complex-compare": "node evals/complex_compare.js",
+    "eval:transcript-emulation": "node evals/transcript_emulation_compare.js",
+    "eval:transcript-user": "node evals/run_transcript_emulator.js",
+    "eval:transcript-user-call": "node evals/run_transcript_user_call.js",
+    "eval:transcript-user-compare": "node evals/compare_transcript_user_calls.js",
     "test": "node --test test/*.test.js"
   },
   "dependencies": { "express": "^4.21.2" }

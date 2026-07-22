@@ -25,7 +25,7 @@ async function runVariant(name, llm) {
   const results = [];
   for (const step of testCase.turns) {
     const started = performance.now();
-    const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: 'gpt-4o-mini', llm, context, messages: [{ role: 'user', content: step.caller }], stream: true }) });
+    const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json', 'x-group-poc-api-key': process.env.GROUP_POC_API_KEY || '' }, body: JSON.stringify({ model: 'gpt-4o-mini', llm, context, messages: [{ role: 'user', content: step.caller }], stream: true }) });
     const body = parseSse(await response.text());
     const tools = body.group_poc?.trace?.flatMap((pass) => pass.tool_calls) || [];
     const requiredPassed = step.required.every((tool) => tools.includes(tool));

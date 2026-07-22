@@ -1,6 +1,10 @@
 import { callTool } from './tool_client.js';
 
 const MAX_TOOL_PASSES = 5;
+const ALLOWED_PROVIDER_URLS = new Set([
+  'https://api.openai.com/v1/chat/completions',
+  'https://api.x.ai/v1/chat/completions'
+]);
 const GLOBAL_INTERRUPTS = [
   { agent: 'contact_preference', pattern: /\b(stop (all )?(collection )?(calls?|calling|contacting|messages?)|do not contact|don't contact|leave me alone)\b/i },
   { agent: 'hardship_support', pattern: /\b(can't sleep|cannot sleep|affecting my sleep|humiliated|despair|suicid|kill myself|hurt myself|panic|can't cope)\b/i },
@@ -37,13 +41,15 @@ function globalHandoffAllowed(agent, userText = '') {
 }
 
 export function createTeamSession(context, llm) {
-  const key = `${context?.appId || 'poc'}:${context?.userId || 'caller'}:${context?.channel || 'default'}`;
+  const callId = context?.call_id || context?.callId || context?.call_uuid || '';
+  const key = `${context?.appId || 'poc'}:${context?.userId || 'caller'}:${context?.channel || 'default'}:${callId}`;
   return {
     key,
     llm,
     activeAgent: llm.agents?.[0]?.name,
     variables: { ...(llm.variables || {}), dialed_phone: context?.dialed_phone || llm.variables?.caller_number || '' },
-    history: []
+    history: [],
+    lastSeen: Date.now()
   };
 }
 
@@ -135,12 +141,13 @@ function systemMessages(session, secrets) {
   const agent = effectiveAgent(session, secrets);
   return agent.system_messages.map((message) => ({ ...message, content: render(message.content, session.variables, secrets) }));
 }
-function boundedHistory(history, maxHistory) {
-  const window = history.slice(-Math.max(1, maxHistory || 32));
-  while (window[0]?.role === 'tool') window.shift();
-  return window;
+export function boundedHistory(history, maxHistory) {
+  let start = Math.max(0, history.length - Math.max(1, maxHistory || 32));
+  while (start > 0 && history[start]?.role === 'tool') start -= 1;
+  return history.slice(start);
 }
 async function providerCompletion(agent, messages, tools, toolChoice = 'auto') {
+  if (!ALLOWED_PROVIDER_URLS.has(agent.url)) throw new Error(`Provider URL is not allowlisted: ${agent.url}`);
   const body = { ...agent.params, messages, tools, tool_choice: toolChoice, stream: false };
   const response = await fetch(agent.url, { method: 'POST', headers: { authorization: `Bearer ${agent.api_key}`, 'content-type': 'application/json' }, body: JSON.stringify(body) });
   const payload = await response.json();

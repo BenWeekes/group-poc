@@ -10,11 +10,27 @@ app.use(express.json({ limit: '1mb' }));
 const sessions = new Map();
 const teamSessions = new Map();
 const port = Number(process.env.PORT || 8110);
+const sessionTtlMs = Number(process.env.SESSION_TTL_MS || 30 * 60 * 1000);
+const inboundApiKey = process.env.GROUP_POC_API_KEY || '';
+
+function contextKey(context = {}) {
+  const callId = context.call_id || context.callId || context.call_uuid || '';
+  return `${context.appId || 'poc'}:${context.userId || 'caller'}:${context.channel || 'default'}:${callId}`;
+}
+function pruneSessions() {
+  const cutoff = Date.now() - sessionTtlMs;
+  for (const [key, value] of sessions) if ((value.lastSeen || 0) < cutoff) sessions.delete(key);
+  for (const [key, value] of teamSessions) if ((value.lastSeen || 0) < cutoff) teamSessions.delete(key);
+}
+function authorised(req) {
+  const supplied = req.get('x-group-poc-api-key') || '';
+  return Boolean(inboundApiKey) && supplied.length === inboundApiKey.length && crypto.timingSafeEqual(Buffer.from(supplied), Buffer.from(inboundApiKey));
+}
 
 function sessionFor(context = {}) {
-  const id = `${context.appId || 'poc'}:${context.userId || 'caller'}:${context.channel || 'default'}`;
-  if (!sessions.has(id)) sessions.set(id, { id, agent: 'outbound_intake', rightPartyVerified: false, customerId: '', dialedPhone: context.dialed_phone || '+441632960123', caseId: context.case_id || `case-${id}` });
-  return sessions.get(id);
+  const id = contextKey(context);
+  if (!sessions.has(id)) sessions.set(id, { id, agent: 'outbound_intake', rightPartyVerified: false, customerId: '', dialedPhone: context.dialed_phone || '+441632960123', caseId: context.case_id || `case-${id}`, lastSeen: Date.now() });
+  const session = sessions.get(id); session.lastSeen = Date.now(); return session;
 }
 function latestUser(messages = []) { return [...messages].reverse().find((m) => m.role === 'user')?.content?.toString() || ''; }
 function toolArgs(name, text) {
@@ -55,9 +71,11 @@ function completion(res, req, content, agent, metrics) {
 app.get('/ping', (_req, res) => res.json({ message: 'pong' }));
 app.post('/chat/completions', async (req, res) => {
   try {
+    if (!authorised(req)) return res.status(401).json({ error: { message: 'unauthorised', type: 'authentication_error' } });
+    pruneSessions();
     if (req.body.llm?.agents?.length) {
       const context = req.body.context || {};
-      const teamKey = `${context.appId || 'poc'}:${context.userId || 'caller'}:${context.channel || 'default'}`;
+      const teamKey = contextKey(context);
       let teamSession = teamSessions.get(teamKey);
       if (!teamSession) {
         teamSession = createTeamSession(context, req.body.llm);
@@ -65,6 +83,7 @@ app.post('/chat/completions', async (req, res) => {
       } else {
         teamSession.llm = req.body.llm;
       }
+      teamSession.lastSeen = Date.now();
       const output = await runTeamTurn(teamSession, latestUser(req.body.messages));
       return completion(res, req, output.content, output.activeAgent, {
         runtime: 'team',

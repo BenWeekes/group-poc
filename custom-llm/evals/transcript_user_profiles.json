@@ -1,0 +1,53 @@
+[
+  {
+    "name": "employee_a_2",
+    "source_file": "employee_a_2.txt",
+    "source_line_utterances": 116,
+    "maximum_caller_turns": 18,
+    "immutable_facts": [
+      "A previous deduction did not go through.",
+      "The caller changed the card that morning because the old card had no money.",
+      "The caller tried three or four times.",
+      "A transfer was attempted at 09:03.",
+      "The caller heard the receiving account might be restricted or frozen.",
+      "The caller was told an account ending 1407 and a 44W Bank account were involved.",
+      "Another collector proposed company WeChat to send account details.",
+      "The caller will not open a wallet/banking app, read account details aloud, or use WeChat for payment instructions."
+    ],
+    "beats": [
+      { "id": "verification", "goal": "give only the challenge answer", "required_words": ["blue harbour"], "min_repeats": 1 },
+      { "id": "failure", "goal": "report that the previous deduction did not go through", "min_repeats": 1 },
+      { "id": "changed_card", "goal": "explain that the old card had no money and the card changed that morning", "min_repeats": 1 },
+      { "id": "repeated_failure", "goal": "say the deduction failed again and it was tried three or four times", "min_repeats": 2 },
+      { "id": "time_and_reference", "goal": "mention the 09:03 attempt and account ending 1407 without reading a full account number", "min_repeats": 1 },
+      { "id": "restricted_account", "goal": "say the caller heard the receiving account might be frozen or restricted", "min_repeats": 1 },
+      { "id": "device_refusal", "goal": "decline to open an OPPO wallet or banking app on the call", "min_repeats": 1 },
+      { "id": "side_channel", "goal": "report that another collector wanted company WeChat to send account details and ask how to verify it", "min_repeats": 2 },
+      { "id": "official_channel", "goal": "ask for an official written next step and say no payment will be made before it", "min_repeats": 2 },
+      { "id": "contact_limit", "goal": "ask not to receive repeated collection calls while the investigation is open", "min_repeats": 2 }
+    ]
+  },
+  {
+    "name": "employee_b_2",
+    "source_file": "employee_b_2.txt",
+    "source_line_utterances": 247,
+    "maximum_caller_turns": 24,
+    "immutable_facts": [
+      "The caller went to a bank and contacted the platform.",
+      "The caller asks repeatedly for time and says they will try to resolve it today.",
+      "Amounts mentioned are 189.38, 199, and 2,089 yuan; they are disputed/uncertain speech figures and must not be treated as confirmed payment instructions.",
+      "The caller says they are at a police station and under serious pressure.",
+      "The caller says the repeated contact has affected them badly and asks the agent to stop contacting them."
+    ],
+    "beats": [
+      { "id": "verification", "goal": "give only the challenge answer", "required_words": ["blue harbour"], "min_repeats": 1 },
+      { "id": "bank_visit", "goal": "say the caller went to the bank after a platform message but cannot resolve it immediately", "min_repeats": 2 },
+      { "id": "time_request", "goal": "ask for time and say the caller will try to handle it today", "min_repeats": 4 },
+      { "id": "uncertain_amounts", "goal": "repeat the uncertain figures 189.38, 199, and 2,089 yuan and ask for official written clarification", "min_repeats": 2 },
+      { "id": "responsibility", "goal": "say the caller is not refusing responsibility but cannot make an immediate promise", "min_repeats": 3 },
+      { "id": "distress", "goal": "say the pressure and repetition have affected the caller badly; request support rather than payment pressure", "min_repeats": 3 },
+      { "id": "contact_refusal", "goal": "ask the agent not to contact the caller or repeat the same question", "min_repeats": 4 },
+      { "id": "hang_up", "goal": "ask to end the call after confirming the contact preference", "min_repeats": 2 }
+    ]
+  }
+]

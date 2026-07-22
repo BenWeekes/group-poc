@@ -28,7 +28,7 @@ function parseSse(text) {
 }
 async function turn(llm, context, caller) {
   const started = performance.now();
-  const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: llm.params.model, llm, context, messages: [{ role: 'user', content: caller }], stream: true }) });
+  const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json', 'x-group-poc-api-key': process.env.GROUP_POC_API_KEY || '' }, body: JSON.stringify({ model: llm.params.model, llm, context, messages: [{ role: 'user', content: caller }], stream: true }) });
   const body = parseSse(await response.text());
   const tools = body.group_poc?.trace?.flatMap((pass) => pass.tool_calls) || [];
   return { caller, http_status: response.status, error: body.error?.message, agent: body.group_poc?.agent, tools, expected_tool: expectedTool(caller), expected_tool_called: !expectedTool(caller) || tools.includes(expectedTool(caller)), wall_latency_ms: Number((performance.now() - started).toFixed(2)), usage: body.group_poc?.usage || {} };

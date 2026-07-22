@@ -30,7 +30,7 @@
 
 - Express request bodies are size limited.
 - Tools use timing-safe secret comparison.
-- Providers cannot choose arbitrary tool URLs.
+- Providers cannot choose arbitrary tool URLs, and team provider URLs are restricted to the configured OpenAI and xAI chat-completions endpoints.
 
 ## Related Deep Dives
 

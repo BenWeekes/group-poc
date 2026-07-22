@@ -22,6 +22,8 @@ services:
       LLM_API_KEY: ${LLM_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       XAI_API_KEY: ${XAI_API_KEY:-}
+      GROUP_POC_API_KEY: ${GROUP_POC_API_KEY:?set GROUP_POC_API_KEY}
+      SESSION_TTL_MS: ${SESSION_TTL_MS:-1800000}
     depends_on:
       - tools
     ports:

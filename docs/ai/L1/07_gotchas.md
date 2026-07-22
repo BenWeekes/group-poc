@@ -5,7 +5,7 @@
 ## Runtime state
 
 - Sessions are in memory; restarting Custom LLM loses agent, variables, and history.
-- Reusing the same `appId:userId:channel` continues one session.
+- Sessions expire after `SESSION_TTL_MS` (30 minutes by default). Include a unique `context.call_id` for every call so a new call cannot inherit verification state from a reused channel.
 - The runtime replaces the session's config every turn but retains its state.
 - The runtime store is ignored mutable data, not the committed seed.
 

@@ -30,7 +30,7 @@ async function callerTurn(history, phase, finalPhase) {
 }
 async function engineTurn(context, text) {
   const started = performance.now();
-  const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: llm.params.model, llm, context, messages: [{ role: 'user', content: text }], stream: true }) });
+  const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json', 'x-group-poc-api-key': process.env.GROUP_POC_API_KEY || '' }, body: JSON.stringify({ model: llm.params.model, llm, context, messages: [{ role: 'user', content: text }], stream: true }) });
   const body = parseSse(await response.text());
   return { caller: text, agent: body.group_poc?.agent, reply: body.choices?.[0]?.delta?.content, trace: body.group_poc?.trace, usage: body.group_poc?.usage, wall_latency_ms: Number((performance.now() - started).toFixed(2)) };
 }
