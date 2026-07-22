@@ -60,6 +60,8 @@ A handoff is exposed to the current LLM as a synthesized function. The caller ex
 
 The runtime must validate the capture schema before switching agents. It must reject a transfer when a required capture is missing or malformed.
 
+`available_from: "*"` makes a destination globally reachable, but it must not mean “always transfer here.” The runtime may expose a global handoff only when the current caller turn matches its stated criterion; critical global intents should also be intercepted deterministically before a model chooses a function.
+
 ## Tool definition
 
 Tools use an OpenAI-compatible parameter schema plus REST request and response mappings. `response.capture` writes deterministic values to the session store; `response.return` is the concise result placed into the LLM context.
@@ -124,3 +126,12 @@ Each turn records the selected agent, safety gate, tool calls, route latency, to
 - route/tool latency measured in the POC;
 - estimated prompt-token exposure per turn;
 - monolithic versus specialist prompt-size comparison.
+
+## Evaluation modes
+
+The POC uses two complementary real-provider evaluation styles in addition to deterministic routing cases:
+
+- **Engine-shaped replay:** every caller turn sends the full `llm` object, stable session `context`, one user message, and `stream: true` to the public Custom LLM endpoint. The longer English sequences are deidentified caller-side approximations of the machine-translated recordings.
+- **Independent caller simulation:** a separate LLM generates the next caller utterance from recent conversation and a constrained scenario phase. This tests adaptive behaviour without allowing the simulator to compress an entire scenario into one utterance.
+
+Both record selected agent, handoffs, tool calls, per-pass and wall-clock latency, and actual upstream token usage. They are intended to uncover routing and prompt gaps as well as demonstrate multi-model agent overrides.

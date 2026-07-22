@@ -1,0 +1,54 @@
+[
+  {
+    "name": "payment_pressure_and_distress",
+    "source": "Employee A-1",
+    "verification_answer": "blue harbour",
+    "caller_turns": [
+      "I cannot pay the balance today. The pressure is too high.",
+      "My income has dropped and I am trying to work out what I can do.",
+      "I can try tomorrow, but I cannot promise three or five days from now.",
+      "I have already explained that I am under a lot of pressure.",
+      "I cannot sleep because of this. I need some time and support.",
+      "Please do not keep demanding an answer while I am trying to deal with it."
+    ]
+  },
+  {
+    "name": "changed_card_and_failed_deductions",
+    "source": "Employee A-2",
+    "verification_answer": "blue harbour",
+    "caller_turns": [
+      "The previous payment did not go through and I do not understand why.",
+      "There was no money on the old card, so I changed the card this morning.",
+      "The deduction failed again after I changed it.",
+      "I tried to pay three or four times. I am worried the receiving account may be restricted.",
+      "I need to know whether the account details are official before I try again.",
+      "Please send any confirmed instructions through the official channel."
+    ]
+  },
+  {
+    "name": "side_channel_payment_instruction",
+    "source": "Employee B-1",
+    "verification_answer": "blue harbour",
+    "caller_turns": [
+      "I paid yesterday, but the system did not show it.",
+      "I do not know which account I am meant to use.",
+      "Someone asked me to add them on WeChat and said they would send the account number.",
+      "They also mentioned a backup account and a public account number.",
+      "I do not want to transfer money to something I cannot verify.",
+      "Can you tell me the official next step?"
+    ]
+  },
+  {
+    "name": "time_request_then_cease_contact",
+    "source": "Employee B-2",
+    "verification_answer": "blue harbour",
+    "caller_turns": [
+      "I went to the bank, but I still cannot resolve this today.",
+      "I have already contacted the platform and asked for time.",
+      "I want to handle the money, but I need until later today.",
+      "I am under serious pressure and this has affected me badly.",
+      "Can you give me time instead of repeating the same question?",
+      "I do not need you to contact me again. Please stop calling me."
+    ]
+  }
+]

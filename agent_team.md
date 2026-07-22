@@ -90,13 +90,15 @@ This run took four provider turns for verification/account status, three for the
 - File-backed mock account data rather than a CRM or payment database.
 - Deterministic routing for the main Debt Recovery Team pathways.
 - Twelve English evaluation cases, including four inspired by the supplied call transcripts.
-- Evaluation output for pathway accuracy, route latency, and specialist-versus-monolithic prompt-token estimates.
+- Engine-shaped long replays: each caller turn sends the complete team `llm` object, stable session context, and streaming request to the public Custom LLM endpoint.
+- An independent caller LLM evaluation, with phased scenario constraints so it responds to the team rather than merely replaying a fixed script.
+- Evaluation output for pathway accuracy, route latency, actual provider token usage, and specialist-versus-monolithic prompt-token estimates.
 
 The current evaluation suite passes 12 of 12 routing cases. Its deterministic router averaged roughly 0.18 ms; the specialist prompt estimate was about 21.6 tokens per route compared with an 88-token monolithic baseline. This measures the POC routing layer, not end-to-end LLM quality or live-call latency.
 
 ## Next evaluation steps
 
-- Run the same cases through a real upstream LLM and compare route/tool accuracy against the deterministic baseline.
-- Add multi-turn tests that verify state survives several transfers.
-- Measure end-to-end streaming latency and actual provider token usage.
+- Repeat real-provider cases to compare route/tool accuracy against the deterministic baseline.
+- Expand multi-turn assertions that verify state survives several transfers.
+- Compare end-to-end streaming latency and actual provider token usage across specialist-model choices.
 - Add equivalent teams in other domains to demonstrate the proposed API across different Agora use cases.

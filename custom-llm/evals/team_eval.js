@@ -15,7 +15,7 @@ for (const text of turns) {
   const started = performance.now();
   const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: 'gpt-4o-mini', llm, context, messages: [{ role: 'user', content: text }] }) });
   const body = await response.json();
-  output.push({ user: text, http_status: response.status, wall_latency_ms: Number((performance.now() - started).toFixed(2)), agent: body.group_poc?.agent, reply: body.choices?.[0]?.message?.content, usage: body.group_poc?.usage, trace: body.group_poc?.trace });
+  output.push({ user: text, http_status: response.status, error: body.error?.message, wall_latency_ms: Number((performance.now() - started).toFixed(2)), agent: body.group_poc?.agent, reply: body.choices?.[0]?.message?.content, usage: body.group_poc?.usage, trace: body.group_poc?.trace });
   if (!response.ok) break;
 }
 console.log(JSON.stringify({ context, output }, null, 2));
