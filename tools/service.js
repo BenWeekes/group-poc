@@ -8,14 +8,17 @@ const app = express();
 app.use(express.json({ limit: '64kb' }));
 const port = Number(process.env.PORT || 8111);
 const secret = process.env.INTERNAL_TOOL_SECRET || '';
-const dataPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data', 'accounts.json');
+const dataDir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data');
+const seedPath = path.join(dataDir, 'accounts.json');
+const dataPath = process.env.DATA_FILE || path.join(dataDir, 'accounts.runtime.json');
 
 function unauthorized(res) { return res.status(403).json({ error: 'forbidden' }); }
 function authorised(req) {
   const supplied = req.get('x-internal-tool-secret') || '';
   return Boolean(secret) && supplied.length === secret.length && crypto.timingSafeEqual(Buffer.from(supplied), Buffer.from(secret));
 }
-async function readStore() { return JSON.parse(await fs.readFile(dataPath, 'utf8')); }
+async function ensureStore() { try { await fs.access(dataPath); } catch { await fs.copyFile(seedPath, dataPath); } }
+async function readStore() { await ensureStore(); return JSON.parse(await fs.readFile(dataPath, 'utf8')); }
 async function writeStore(store) { await fs.writeFile(dataPath, `${JSON.stringify(store, null, 2)}\n`); }
 function findAccount(store, body = {}) { return store.accounts.find((a) => a.id === body.customer_id || a.phone === body.dialed_phone); }
 async function event(store, type, body) { store.events.push({ id: crypto.randomUUID(), type, at: new Date().toISOString(), ...body }); await writeStore(store); }

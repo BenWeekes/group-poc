@@ -59,6 +59,31 @@ This is an illustrative event trace based on the English evaluation case **“ch
 
 The same call would take a different path if the caller said, “Send the account number to my WeChat.” The global route sends it to Safety & Compliance before a payment agent can provide instructions. If the caller says, “I cannot sleep; the pressure is too high,” it routes to Hardship Support and pauses payment discussion.
 
+### Longer Custom LLM run
+
+The following is a real four-turn POC run through the Custom LLM and GPT-4o-mini. It used the populated team `llm` object, scoped function schemas, the file-backed mock tools, captured handoff variables, and dynamically rebuilt prompts after each transfer. Account values and generated references are mock data.
+
+| Time | Agent | Type | Message or event |
+| --- | --- | --- | --- |
+| `00:00.000` | Outbound Intake | User | “blue harbour” |
+| `00:00.787` | Outbound Intake | Tool | GPT-4o-mini calls `verify_right_party`. |
+| `00:01.563` | Outbound Intake | Handoff | GPT-4o-mini calls `handoff_to_account_status` with verified customer context. |
+| `00:02.610` | Account Status | Tool | Calls `get_account_summary`. |
+| `00:03.892` | Account Status | Agent | Explains the mock account is payment due, with a 199.00 balance and the next due date. |
+| `00:03.892` | Account Status | User | “My deduction failed three times after I changed my card this morning.” |
+| `00:04.780` | Account Status | Handoff | Calls `handoff_to_payment_troubleshooting`. |
+| `00:05.790` | Payment Troubleshooting | Tool | Calls `open_payment_investigation` with a neutral failed-payment summary. |
+| `00:09.239` | Payment Troubleshooting | Agent | Confirms an investigation and tells the caller not to make another payment until official follow-up. |
+| `00:09.239` | Payment Troubleshooting | User | “The pressure is too high. I cannot sleep and I need time to deal with this.” |
+| `00:10.618` | Hardship Support | Tool | Global distress routing selects Hardship Support; GPT-4o-mini calls `create_hardship_case`. |
+| `00:10.618` | Hardship Support | Handoff | Calls `handoff_to_human_specialist`. |
+| `00:12.779` | Human Specialist | Agent | Confirms payment discussion is paused and a specialist will review support options. |
+| `00:12.779` | Human Specialist | User | “Please stop calling me.” |
+| `00:13.565` | Contact Preference | Tool | Global cease-contact routing selects Contact Preference; calls `register_contact_preference`. |
+| `00:14.596` | Contact Preference | Agent | Confirms the communication preference was recorded. |
+
+This run took four provider turns for verification/account status, three for the payment failure, two for hardship/human escalation, and two for cease-contact. That makes the pathway and cost of each transfer visible, rather than hiding every concern in one large prompt.
+
 ## What the POC currently demonstrates
 
 - Nine agents with scoped tools and explicit transfer criteria.

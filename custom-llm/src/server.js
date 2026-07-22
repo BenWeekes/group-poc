@@ -3,10 +3,12 @@ import crypto from 'node:crypto';
 import { AGENTS } from './agents.js';
 import { routeTurn, extractOffer } from './router.js';
 import { callTool, suggestedTool } from './tool_client.js';
+import { createTeamSession, runTeamTurn } from './team_runtime.js';
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
 const sessions = new Map();
+const teamSessions = new Map();
 const port = Number(process.env.PORT || 8110);
 
 function sessionFor(context = {}) {
@@ -53,6 +55,24 @@ function completion(res, req, content, agent, metrics) {
 app.get('/ping', (_req, res) => res.json({ message: 'pong' }));
 app.post('/chat/completions', async (req, res) => {
   try {
+    if (req.body.llm?.agents?.length) {
+      const context = req.body.context || {};
+      const teamKey = `${context.appId || 'poc'}:${context.userId || 'caller'}:${context.channel || 'default'}`;
+      let teamSession = teamSessions.get(teamKey);
+      if (!teamSession) {
+        teamSession = createTeamSession(context, req.body.llm);
+        teamSessions.set(teamKey, teamSession);
+      } else {
+        teamSession.llm = req.body.llm;
+      }
+      const output = await runTeamTurn(teamSession, latestUser(req.body.messages));
+      return completion(res, req, output.content, output.activeAgent, {
+        runtime: 'team',
+        usage: output.usage,
+        trace: output.trace,
+        variables: output.variables
+      });
+    }
     const session = sessionFor(req.body.context); const text = latestUser(req.body.messages);
     const route = routeTurn(session, text); session.agent = route.agent;
     const toolName = suggestedTool(route.agent, text); let toolResult = null;

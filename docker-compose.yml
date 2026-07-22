@@ -4,6 +4,7 @@ services:
     environment:
       PORT: 8111
       INTERNAL_TOOL_SECRET: ${INTERNAL_TOOL_SECRET:?set INTERNAL_TOOL_SECRET}
+      DATA_FILE: /app/data/accounts.runtime.json
     volumes:
       - ./tools/data:/app/data
     expose:
@@ -19,6 +20,8 @@ services:
       LLM_BASE_URL: ${LLM_BASE_URL:-https://api.openai.com/v1}
       LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
       LLM_API_KEY: ${LLM_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      XAI_API_KEY: ${XAI_API_KEY:-}
     depends_on:
       - tools
     ports:
