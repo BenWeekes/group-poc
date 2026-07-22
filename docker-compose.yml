@@ -26,6 +26,8 @@ services:
       SESSION_TTL_MS: ${SESSION_TTL_MS:-1800000}
     depends_on:
       - tools
+    volumes:
+      - ./reports:/app/reports
     ports:
       - "127.0.0.1:8110:8110"
     restart: unless-stopped

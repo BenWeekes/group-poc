@@ -21,7 +21,7 @@ Tool service -> file-backed mock account/event store
 ## Interrupts and providers
 
 - Deterministic interrupts run before model selection for cease-contact, acute distress, and prohibited payment side channels.
-- Root defaults use an OpenAI-compatible provider; an agent can override URL, secret template, model, or parameters.
+- Root defaults use an OpenAI-compatible provider; the product proposal permits agent overrides, but the Debt Recovery Team evaluations deliberately use one GPT-4o-mini configuration for every specialist and the baseline.
 - Tools execute through fixed internal mappings. Tool captures update state without model parsing.
 - This POC uses mock JSON data and logical human escalation only.
 

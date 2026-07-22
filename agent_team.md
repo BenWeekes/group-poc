@@ -104,6 +104,14 @@ The trade-off is latency: the team averaged 2,504 ms per caller turn versus 1,86
 
 A stricter seven-turn same-model test also moved through payment investigation, official follow-up, payment options, promise-to-pay, hardship, and cease-contact with runtime global interrupts disabled for both designs. Both completed the required actions after the team prompt was fixed; the team used 9.5% fewer tokens and avoided an unnecessary baseline tool call, but averaged 48.1% higher latency. This shows where teams can help, but is not a proof of universal superiority.
 
+### Primary 150-message comparison
+
+The primary same-model benchmark now uses 75 source-derived caller turns across the four supplied recordings, producing 150 dialogue messages per variant. It used GPT-4o-mini for every specialist and the single prompt, temperature zero, the same caller trace, shared tools, and per-pass provider telemetry.
+
+The team averaged **925 actual provider input tokens per pass** versus **1,305** for the single prompt (**29.1% lower**), with **2.0** visible tool schemas versus **10.0**. Total provider tokens were **22.4% lower**. History size was nearly identical (19.4 versus 19.2 messages), so the reduction comes from scoped prompts and tools, not simply dropping more conversation.
+
+Reliability was worse in this first long run: expected-action coverage was 60% for the team and 90% for the single prompt. The main defect is concrete and fixable: after a WeChat/QQ report, Safety & Compliance remains terminal and cannot issue a later official follow-up or honour a later contact-preference request. The team also averaged 2,038 ms per caller turn versus 1,549 ms because 15 handoffs produced seven extra provider passes. The detailed record is in [important_runs.md](custom-llm/evals/important_runs.md).
+
 ## Next evaluation steps
 
 - Repeat real-provider cases to compare route/tool accuracy against the deterministic baseline.

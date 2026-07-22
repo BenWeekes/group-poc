@@ -21,6 +21,7 @@
 - Recordings were machine-translated with unreliable speaker labels. Replays are deidentified caller-side approximations, not verbatim transcripts.
 - Deterministic route timing and estimated prompt tokens are not actual model-quality or provider-cost measures.
 - A separate caller model needs phase constraints or it may collapse a whole scenario into one turn.
+- Short examples can hide context-window and handoff costs. The primary benchmark is 75 caller turns / 150 dialogue messages; use its per-pass prompt-token telemetry rather than inferring context size from a static prompt alone.
 - Only `/group-poc/llm/` may be proxied. Editing Nginx `location /` risks the existing application.
 
 ## Related Deep Dives

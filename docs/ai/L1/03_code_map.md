@@ -29,6 +29,7 @@
 - `evals/team_eval.js`: compact real-provider tool and handoff checks.
 - `evals/engine_replay_eval.js`: engine-shaped public endpoint replay.
 - `evals/simulated_caller_eval.js`: independent phase-constrained caller LLM.
+- `evals/eval_150_turn_compare.js`: 75 caller turns / 150 dialogue-message same-trace benchmark with per-pass input telemetry.
 - `tools/service.js`: authenticated mock endpoints and append-only event log.
 - `tools/data/accounts.json`: committed seed; `accounts.runtime.json`: ignored mutable state.
 

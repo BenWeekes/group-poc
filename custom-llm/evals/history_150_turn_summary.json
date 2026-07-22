@@ -1,0 +1,48 @@
+{
+  "date": "2026-07-22",
+  "description": "Curated summary of the same-model 75-caller-turn / 150-dialogue-message replay. Raw per-turn report stays outside Git.",
+  "controls": {
+    "provider": "gpt-4o-mini",
+    "temperature": 0,
+    "team_specialist_model_overrides": false,
+    "global_interrupts": false,
+    "same_75_turn_caller_trace": true
+  },
+  "caller_turns_by_source_profile": {
+    "employee_a_1": 18,
+    "employee_a_2": 18,
+    "employee_b_1": 18,
+    "employee_b_2": 21
+  },
+  "team": {
+    "dialogue_messages": 150,
+    "http_success_rate": 1,
+    "expected_action_coverage": 0.6,
+    "logic_error_count": 4,
+    "tool_execution_errors": 0,
+    "provider_passes": 126,
+    "handoffs": 15,
+    "total_provider_tokens": 122727,
+    "average_provider_input_tokens_per_pass": 925.14,
+    "average_history_messages_per_pass": 19.43,
+    "average_tool_schemas_per_pass": 2.01,
+    "average_wall_latency_ms_per_caller_turn": 2037.75,
+    "average_provider_latency_ms_per_pass": 1208.86
+  },
+  "single_prompt": {
+    "dialogue_messages": 150,
+    "http_success_rate": 1,
+    "expected_action_coverage": 0.9,
+    "logic_error_count": 1,
+    "tool_execution_errors": 0,
+    "provider_passes": 119,
+    "handoffs": 0,
+    "total_provider_tokens": 158099,
+    "average_provider_input_tokens_per_pass": 1305.08,
+    "average_history_messages_per_pass": 19.16,
+    "average_tool_schemas_per_pass": 10,
+    "average_wall_latency_ms_per_caller_turn": 1549.2,
+    "average_provider_latency_ms_per_pass": 972.65
+  },
+  "finding": "The team reduced actual input tokens and tool context, but Safety & Compliance was terminal after a side-channel report and prevented later official-follow-up/contact-preference actions."
+}

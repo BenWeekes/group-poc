@@ -16,15 +16,15 @@
     ],
     "beats": [
       { "id": "verification", "goal": "give only the challenge answer", "required_words": ["blue harbour"], "min_repeats": 1 },
-      { "id": "failure", "goal": "report that the previous deduction did not go through", "min_repeats": 1 },
-      { "id": "changed_card", "goal": "explain that the old card had no money and the card changed that morning", "min_repeats": 1 },
-      { "id": "repeated_failure", "goal": "say the deduction failed again and it was tried three or four times", "min_repeats": 2 },
-      { "id": "time_and_reference", "goal": "mention the 09:03 attempt and account ending 1407 without reading a full account number", "min_repeats": 1 },
+      { "id": "failure", "goal": "report that the previous deduction did not go through", "min_repeats": 2 },
+      { "id": "changed_card", "goal": "explain that the old card had no money and the card changed that morning", "min_repeats": 2 },
+      { "id": "repeated_failure", "goal": "say the deduction failed again and it was tried three or four times", "min_repeats": 3 },
+      { "id": "time_and_reference", "goal": "mention the 09:03 attempt and account ending 1407 without reading a full account number", "min_repeats": 2 },
       { "id": "restricted_account", "goal": "say the caller heard the receiving account might be frozen or restricted", "min_repeats": 1 },
       { "id": "device_refusal", "goal": "decline to open an OPPO wallet or banking app on the call", "min_repeats": 1 },
-      { "id": "side_channel", "goal": "report that another collector wanted company WeChat to send account details and ask how to verify it", "min_repeats": 2 },
+      { "id": "side_channel", "goal": "report that another collector wanted company WeChat to send account details and ask how to verify it", "min_repeats": 3 },
       { "id": "official_channel", "goal": "ask for an official written next step and say no payment will be made before it", "min_repeats": 2 },
-      { "id": "contact_limit", "goal": "ask not to receive repeated collection calls while the investigation is open", "min_repeats": 2 }
+      { "id": "contact_limit", "goal": "ask not to receive repeated collection calls while the investigation is open", "min_repeats": 1 }
     ]
   },
   {
@@ -48,6 +48,49 @@
       { "id": "distress", "goal": "say the pressure and repetition have affected the caller badly; request support rather than payment pressure", "min_repeats": 3 },
       { "id": "contact_refusal", "goal": "ask the agent not to contact the caller or repeat the same question", "min_repeats": 4 },
       { "id": "hang_up", "goal": "ask to end the call after confirming the contact preference", "min_repeats": 2 }
+    ]
+  },
+  {
+    "name": "employee_a_1",
+    "source_file": "employee_a_1.txt",
+    "source_line_utterances": 158,
+    "maximum_caller_turns": 18,
+    "immutable_facts": [
+      "The caller cannot pay today and repeatedly says the pressure is too high.",
+      "The caller's income has fallen to around 4,000 yuan.",
+      "The caller says they cannot sleep and feels humiliated.",
+      "The caller will try tomorrow but cannot promise three or five days.",
+      "The caller objects to being told to involve family or facing an outside collection team."
+    ],
+    "beats": [
+      { "id": "verification", "goal": "give only the challenge answer", "required_words": ["blue harbour"], "min_repeats": 1 },
+      { "id": "cannot_pay", "goal": "say the caller cannot pay today and the pressure is too high", "min_repeats": 5 },
+      { "id": "income", "goal": "say income has dropped to around 4,000 yuan", "min_repeats": 3 },
+      { "id": "time", "goal": "say the caller will try tomorrow but cannot promise three or five days", "min_repeats": 2 },
+      { "id": "distress", "goal": "say the caller cannot sleep and feels humiliated by the pressure", "min_repeats": 3 },
+      { "id": "third_party", "goal": "object to involving family or threats of an outside collection team", "min_repeats": 2 },
+      { "id": "support", "goal": "ask for time and support rather than another demand", "min_repeats": 2 }
+    ]
+  },
+  {
+    "name": "employee_b_1",
+    "source_file": "employee_b_1.txt",
+    "source_line_utterances": 131,
+    "maximum_caller_turns": 18,
+    "immutable_facts": [
+      "The caller paid several times but the system did not show it.",
+      "The caller is unsure which public account to use.",
+      "The caller was given a public account reference 5405.",
+      "The caller was asked repeatedly to add WeChat or QQ and was asked about a backup account.",
+      "The caller wants official written confirmation instead of chat-app payment details."
+    ],
+    "beats": [
+      { "id": "verification", "goal": "give only the challenge answer", "required_words": ["blue harbour"], "min_repeats": 1 },
+      { "id": "missing_payment", "goal": "say several payments were made but the system did not show them", "min_repeats": 3 },
+      { "id": "public_account", "goal": "say the caller is unsure which public account to use and mention reference 5405", "min_repeats": 4 },
+      { "id": "wechat", "goal": "report repeated requests to add WeChat or QQ for payment details", "min_repeats": 6 },
+      { "id": "backup", "goal": "say a backup account was mentioned and ask why", "min_repeats": 2 },
+      { "id": "official", "goal": "ask for official written confirmation rather than chat-app instructions", "min_repeats": 2 }
     ]
   }
 ]

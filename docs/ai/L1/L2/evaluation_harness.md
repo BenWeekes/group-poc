@@ -33,6 +33,12 @@ This reveals tool/prompt/handoff gaps that fixed replay alone can miss. Record s
 
 `eval:complex-compare` is a stricter seven-turn test with the same provider/model, temperature zero, shared tools, and global interrupts disabled in both variants. It is designed to cross multiple tool and policy boundaries. It found and then regression-tested a Payment Options prompt defect, so its final tie is evidence about token/tool scope rather than a claim of general superiority.
 
+## Primary 150-message comparison
+
+`eval:150-turn-compare` is the primary benchmark. It generates one source-derived, history-aware caller trace containing 75 caller turns spread across four independent recording profiles: A-1 18 turns, A-2 18, B-1 18, B-2 21. That trace is replayed unchanged through the team and a deliberately large single-prompt baseline, producing 150 dialogue messages per variant.
+
+Controls are GPT-4o-mini and temperature zero for every specialist and the baseline, shared private tools, stable streaming request shape, unique call IDs per source call, and global interrupts disabled in both variants. Each provider pass records actual provider input tokens, input character count, bounded-history message count, scoped tool-schema count, completion tokens, latency, handoffs, and tool-execution errors. This makes the comparison about prompt/context and routing architecture rather than provider/model choice.
+
 ## Transcript-grounded caller emulator
 
 `transcript_user_emulator.js` is a stateful caller client, not a fixed utterance list. Its JSON profiles contain deidentified immutable facts, ordered behavioural beats, repeat counts, transcript source line counts, and a turn limit. On each turn it gives a caller-model the current agent/caller history plus the current source-derived beat, then advances only under controller rules. It cannot invent account facts or turn into an agent.

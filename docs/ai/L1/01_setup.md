@@ -6,7 +6,7 @@
 
 - Docker Compose runs both Node.js 20 services.
 - Nginx access is only needed to deploy the reviewed narrow proxy route.
-- Real-provider evaluations need local `OPENAI_API_KEY`; mixed-provider evaluations also need `XAI_API_KEY`.
+- Real-provider evaluations need local `OPENAI_API_KEY`. The Debt Recovery Team comparison fixture uses GPT-4o-mini for every specialist and the single-prompt baseline.
 
 ## Local configuration
 
@@ -26,6 +26,7 @@ The tool service is Docker-network-only. Custom LLM binds on `127.0.0.1:8110`; N
 | `docker compose exec -T custom-llm npm run eval:team` | Short real-provider team checks |
 | `docker compose exec -T custom-llm npm run eval:engine-replay` | Long public-endpoint replay |
 | `docker compose exec -T custom-llm npm run eval:simulated-caller` | Separate LLM caller evaluation |
+| `docker compose exec -T custom-llm npm run eval:150-turn-compare` | Primary 150-dialogue-message, same-model comparison |
 
 ## Endpoints
 

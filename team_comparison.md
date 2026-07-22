@@ -2,6 +2,8 @@
 
 This is a live, reproducible POC comparison, not a production performance claim. Both variants replay the same 28 deidentified caller turns through the public Custom LLM endpoint and the same file-backed tools. The team uses scoped specialist prompts and explicit handoffs; the baseline is one agent with the complete prompt and all ten tools.
 
+> The current primary comparison is the [150-dialogue-message run](custom-llm/evals/important_runs.md#2026-07-22--primary-150-dialogue-message-same-model-run), which uses GPT-4o-mini for every specialist and the baseline. The older mixed-provider result below is retained only as history.
+
 ## First live run — mixed specialist models
 
 The team used GPT-4o-mini by default and Grok 4.3 for hardship. The baseline used GPT-4o-mini. This demonstrates the configured system as a whole, but provider choice is a confounder, so it is not the controlled architecture-only result.

@@ -15,6 +15,7 @@
     "eval:transcript-user": "node evals/run_transcript_emulator.js",
     "eval:transcript-user-call": "node evals/run_transcript_user_call.js",
     "eval:transcript-user-compare": "node evals/compare_transcript_user_calls.js",
+    "eval:150-turn-compare": "node evals/eval_150_turn_compare.js",
     "test": "node --test test/*.test.js"
   },
   "dependencies": { "express": "^4.21.2" }

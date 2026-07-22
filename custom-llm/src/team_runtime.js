@@ -180,7 +180,21 @@ export async function runTeamTurn(session, userText) {
     const choice = response.choices?.[0]?.message || {};
     const turnUsage = response.usage || {};
     for (const key of Object.keys(usage)) usage[key] += Number(turnUsage[key] || 0);
-    trace.push({ pass: pass + 1, agent: agent.name, model: agent.params.model, latency_ms: latencyMs, tool_calls: choice.tool_calls?.map((call) => call.function.name) || [] });
+    const traceEntry = {
+      pass: pass + 1,
+      agent: agent.name,
+      model: agent.params.model,
+      latency_ms: latencyMs,
+      prompt_tokens: Number(turnUsage.prompt_tokens || 0),
+      completion_tokens: Number(turnUsage.completion_tokens || 0),
+      input_message_count: messages.length,
+      history_message_count: messages.length - systemMessages(session, secrets).length,
+      input_character_count: messages.reduce((sum, message) => sum + JSON.stringify(message).length, 0),
+      tool_count: tools.length,
+      tool_calls: choice.tool_calls?.map((call) => call.function.name) || [],
+      tool_errors: []
+    };
+    trace.push(traceEntry);
     if (!choice.tool_calls?.length) {
       const content = choice.content || agent.failure_message || 'Sorry, something went wrong.';
       session.history.push({ role: 'assistant', content });
@@ -190,7 +204,7 @@ export async function runTeamTurn(session, userText) {
     for (const call of choice.tool_calls) {
       let result;
       try { result = await executeTeamTool(session, call.function.name, JSON.parse(call.function.arguments || '{}'), secrets); }
-      catch (error) { result = { error: error.message }; }
+      catch (error) { result = { error: error.message }; traceEntry.tool_errors.push({ name: call.function.name, message: error.message }); }
       session.history.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify(result) });
     }
   }
