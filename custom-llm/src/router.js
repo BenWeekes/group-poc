@@ -5,7 +5,7 @@ const patterns = {
   distress: /\b(can't sleep|cannot sleep|humiliated|despair|suicid|kill myself|hurt myself|panic|can't cope)\b/i,
   sideChannel: /\b(wechat|qq|qr ?code|personal account|social media|banking app|wallet app|screen ?share)\b/i,
   dispute: /\b(not my (account|loan|debt)|scam|fraud|wrong (account|balance|amount)|unauthori[sz]ed)\b/i,
-  paymentIssue: /\b(payment failed|failed payment|duplicate|pending|charged twice|card changed|frozen|wrong place)\b/i,
+  paymentIssue: /\b(payment failed|failed payment|duplicate|pending|charged twice|card changed|changed (my )?card|frozen|wrong place|wrong person|wrong destination)\b/i,
   hardship: /\b(can't pay|cannot pay|no money|financial pressure|need more time|afford)\b/i,
   payment: /\b(pay|payment|instal+ment|installment|due date|partial)\b/i
 };

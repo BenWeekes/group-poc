@@ -6,5 +6,9 @@
   { "name": "distress", "verified": true, "text": "I cannot sleep and I feel humiliated. I need support.", "expected_agent": "hardship_support", "expected_safety_gate": "distress" },
   { "name": "cease_contact", "verified": true, "text": "Do not contact me again.", "expected_agent": "contact_preference", "expected_safety_gate": "cease_contact" },
   { "name": "side_channel", "verified": true, "text": "Send the payment account to my WeChat.", "expected_agent": "safety_compliance", "expected_safety_gate": "side_channel" },
-  { "name": "fraud", "verified": true, "text": "This is not my loan. I think this is a scam.", "expected_agent": "dispute_fraud", "expected_safety_gate": null }
+  { "name": "fraud", "verified": true, "text": "This is not my loan. I think this is a scam.", "expected_agent": "dispute_fraud", "expected_safety_gate": null },
+  { "name": "transcript_pressure_and_distress", "verified": true, "text": "The pressure is too high. I cannot sleep and I need time to deal with this.", "expected_agent": "hardship_support", "expected_safety_gate": "distress" },
+  { "name": "transcript_changed_card_failure", "verified": true, "text": "The deduction failed three times after I changed my card this morning.", "expected_agent": "payment_troubleshooting", "expected_safety_gate": null },
+  { "name": "transcript_wechat_account_instruction", "verified": true, "text": "Please add my company WeChat and send the public account number there.", "expected_agent": "safety_compliance", "expected_safety_gate": "side_channel" },
+  { "name": "transcript_wrong_destination", "verified": true, "text": "I paid, but it may have gone to the wrong person instead of the platform.", "expected_agent": "payment_troubleshooting", "expected_safety_gate": null }
 ]
