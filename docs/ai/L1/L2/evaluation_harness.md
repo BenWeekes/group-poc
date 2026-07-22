@@ -31,6 +31,8 @@ This reveals tool/prompt/handoff gaps that fixed replay alone can miss. Record s
 
 `team_comparison.md` records both a mixed-provider run and a controlled GPT-4o-mini run. The controlled run used fewer team tokens and had higher labelled critical-tool coverage, but the team had higher per-turn latency. Treat it as reproducible POC evidence, not a production conclusion.
 
+`eval:complex-compare` is a stricter seven-turn test with the same provider/model, temperature zero, shared tools, and global interrupts disabled in both variants. It is designed to cross multiple tool and policy boundaries. It found and then regression-tested a Payment Options prompt defect, so its final tie is evidence about token/tool scope rather than a claim of general superiority.
+
 ## See Also
 
 - [Workflows](../05_workflows.md)

@@ -154,7 +154,7 @@ async function providerCompletion(agent, messages, tools, toolChoice = 'auto') {
 export async function runTeamTurn(session, userText) {
   const secrets = providerSecrets();
   if (!session.llm?.agents?.length) throw new Error('A populated llm.agents array is required for team runtime mode');
-  const interrupt = GLOBAL_INTERRUPTS.find((item) => item.pattern.test(userText));
+  const interrupt = session.llm.enable_global_interrupts === false ? null : GLOBAL_INTERRUPTS.find((item) => item.pattern.test(userText));
   if (interrupt && findAgent(session.llm, interrupt.agent)) session.activeAgent = interrupt.agent;
   session.currentUserText = userText;
   session.history.push({ role: 'user', content: userText });

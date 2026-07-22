@@ -10,6 +10,7 @@
     "eval:engine-replay": "node evals/engine_replay_eval.js",
     "eval:simulated-caller": "node evals/simulated_caller_eval.js",
     "eval:compare": "node evals/compare_team_monolithic.js",
+    "eval:complex-compare": "node evals/complex_compare.js",
     "test": "node --test test/*.test.js"
   },
   "dependencies": { "express": "^4.21.2" }

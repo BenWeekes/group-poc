@@ -102,6 +102,8 @@ The POC also ran the same 28 transcript-derived caller turns through two real GP
 
 The trade-off is latency: the team averaged 2,504 ms per caller turn versus 1,860 ms for one prompt (34.6% slower). A handoff sometimes requires another model pass. The evidence therefore supports scoped prompts and tools for reliability and token exposure, but it does **not** support claiming that teams automatically reduce end-to-end voice latency. Full per-run methodology and a mixed-model result are in [team_comparison.md](team_comparison.md).
 
+A stricter seven-turn same-model test also moved through payment investigation, official follow-up, payment options, promise-to-pay, hardship, and cease-contact with runtime global interrupts disabled for both designs. Both completed the required actions after the team prompt was fixed; the team used 9.5% fewer tokens and avoided an unnecessary baseline tool call, but averaged 48.1% higher latency. This shows where teams can help, but is not a proof of universal superiority.
+
 ## Next evaluation steps
 
 - Repeat real-provider cases to compare route/tool accuracy against the deterministic baseline.

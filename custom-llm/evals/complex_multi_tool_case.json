@@ -1,0 +1,12 @@
+{
+  "name": "changed_card_to_payment_plan_to_hardship_to_cease_contact",
+  "turns": [
+    { "caller": "blue harbour", "required": ["verify_right_party", "get_account_summary"] },
+    { "caller": "My deduction failed after I changed my card. Please investigate it; I do not want to retry it.", "required": ["open_payment_investigation"] },
+    { "caller": "Please send the confirmed investigation next step through the official channel only.", "required": ["send_official_follow_up"] },
+    { "caller": "I cannot pay the full balance today. What approved payment options do I have?", "required": ["get_payment_options"] },
+    { "caller": "I can pay 50 on 2026-07-25. Please record that and confirm it officially.", "required": ["record_promise_to_pay", "send_official_follow_up"] },
+    { "caller": "Actually the pressure is affecting my sleep. I need time and support, not another payment request.", "required": ["create_hardship_case"], "forbidden": ["get_payment_options", "record_promise_to_pay"] },
+    { "caller": "Please stop all collection calls and messages from now on.", "required": ["register_contact_preference"], "forbidden": ["get_payment_options", "record_promise_to_pay", "open_payment_investigation"] }
+  ]
+}

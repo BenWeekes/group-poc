@@ -56,3 +56,23 @@ docker compose exec -T -e TEAM_FORCE_ROOT_PROVIDER=true custom-llm npm run eval:
 ```
 
 Set `REPORT_PATH=/tmp/team-vs-monolithic.json` to retain the raw per-turn report outside Git. The evaluator reports HTTP success, critical-tool coverage, extra verification tools, provider usage, and wall latency.
+
+## Complex multi-tool call — same-model control
+
+This seven-turn call deliberately moves through verification, payment investigation, official follow-up, payment options, promise-to-pay, hardship, and cease-contact. It disables the runtime's global interrupts in **both** variants, uses GPT-4o-mini at temperature zero for every specialist and the single prompt, and shares the same tool service. The single-prompt policy is intentionally much longer and includes every relevant rule.
+
+| Metric | Team | Single prompt | Observation |
+| --- | ---: | ---: | --- |
+| Ordered required actions | 7 / 7 | 7 / 7 | Both completed the workflow after a team prompt fix |
+| Forbidden tool calls | 0 | 0 | Both stopped payment actions after hardship/contact preference |
+| Extra cease-contact tool at verification | No | Yes | Full tool scope still caused an unnecessary baseline call |
+| Total provider tokens | 18,897 | 20,890 | Team used 9.5% fewer tokens |
+| Mean wall latency / turn | 3,056 ms | 2,063 ms | Team was 48.1% slower |
+
+The initial run caught an ordinary-payment bug in the Payment Options specialist: it escalated `50 on 2026-07-25` instead of recording the promise. The specialist prompt was corrected and the exact same case rerun. This is important evidence for the development process, but it means the final tie does **not** prove general team reliability.
+
+Run it with:
+
+```bash
+docker compose exec -T custom-llm npm run eval:complex-compare
+```
