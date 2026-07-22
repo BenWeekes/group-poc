@@ -1,16 +1,18 @@
-# Group POC — safe multi-agent call routing
+# Group POC — Agora team-of-agents proposal and evaluation
 
-This proof of concept evaluates a specialised-agent architecture for outbound account and payment-support calls. It uses a Custom LLM server compatible with Agora ConvoAI, a file-backed mock tool service, and synthetic English evaluation conversations.
+This repository is a proposal and working evaluation for an Agora team-of-agents capability. It explores how one ConvoAI session can transfer between specialist agents, preserve context, scope tools, and measure the result against a single-prompt baseline.
+
+Debt recovery is the working evaluation domain because it produces realistic routing pressure: identity verification, payment options, payment failures, hardship, disputes, communication preferences, and escalation. The architecture is intentionally reusable for other Agora agent-team use cases.
 
 ## Documentation
 
-- [Agent team and safety model](agent_team.md)
+- [Debt-recovery agent team and workflow model](agent_team.md)
 - [Proposed Agora session configuration](agent_team_join.md)
 - [Developer API: multi-agent `llm` capability](docs_llm.md)
 
 ## POC components
 
-- `custom-llm/` — OpenAI-compatible Custom LLM proxy. It picks a specialist agent, scopes tools, applies deterministic safety gates, and delegates tool execution to the tool service.
+- `custom-llm/` — OpenAI-compatible Custom LLM proxy. It selects a specialist agent, scopes tools, applies deterministic policy routing, and delegates tool execution to the tool service.
 - `tools/` — local REST API with a JSON-file account store. It is private to the Docker network; it is never exposed through Nginx.
 - `evals/` — synthetic English test cases and the comparative evaluation runner.
 
@@ -34,4 +36,4 @@ docker compose exec -T custom-llm npm run eval
 
 ## Status
 
-This is a prototype with mock data only. It must not be used for real debt collection, payment processing, or real customer information.
+This is a prototype with mock data only. It is for evaluating the agent-team model, not for real debt collection, payment processing, or real customer information.

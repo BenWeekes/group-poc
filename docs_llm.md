@@ -1,10 +1,10 @@
-# Developer API: multi-agent `llm` capability
+# Developer API: team-of-agents `llm` capability
 
 ## Status and scope
 
 This document specifies a proposed extension to the Agora ConvoAI `llm` configuration. It is a POC contract, not a released Agora API. Existing single-agent payloads remain valid: omitting `llm.agents` retains current behaviour.
 
-The objective is to let a session enter through one agent, transfer between specialised agents without making the caller repeat context, and restrict each agent to the smallest tool set it needs.
+The objective is to let a session enter through one agent, transfer between specialised agents without making the caller repeat context, restrict each agent to the smallest tool set it needs, and measure the outcome against a single-agent prompt. Debt recovery is the working evaluation domain; the API itself is domain-neutral.
 
 ## Root configuration
 
