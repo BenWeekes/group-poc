@@ -1,5 +1,65 @@
 # Proposed Agora ConvoAI session payload
 
+## Proposed additions to the existing `llm` object
+
+The current `llm` configuration remains unchanged for a single agent: `url`, `api_key`, `system_messages`, `greeting_message`, `failure_message`, `max_history`, `params`, and `style` continue to work as they do today.
+
+The proposal adds the following optional fields. If `agents` is omitted, behaviour is exactly the current single-agent behaviour.
+
+| Field | Location | Purpose |
+| --- | --- | --- |
+| `variables` | `llm.variables` | Session state seeded by the application server and updated by tools/handoffs. Read anywhere as `{{vars.name}}`. |
+| `tools` | `llm.tools` | Shared tool library. Tools are defined once and named by individual agents. |
+| `agents` | `llm.agents` | Ordered specialist agents. The first is the entry agent and owns `greeting_message`. |
+| `name` | `llm.agents[]` | Stable unique agent identifier used by handoffs. |
+| `requires` | `llm.agents[]` | Variables that must be present before an agent can activate. |
+| `transition_message` | `llm.agents[]` | Optional message spoken when a handoff reaches that agent; `null` means silent. |
+| `tools` | `llm.agents[]` | Allow-list of names from `llm.tools`; only these tools are visible to that agent. |
+| `handoffs` | `llm.agents[]` | Transfer definitions exposed to the active agent as functions. |
+| `to` | `handoffs[]` | Destination agent name. |
+| `context` | `handoffs[]` | Recent conversation passed to the destination, for example `{ "mode": "user_and_assistant", "max_messages": 12 }`. |
+| `capture` | `handoffs[]` | JSON-schema fields collected at handoff and written to `variables`; required fields block incomplete transfers. |
+| `available_from` | `llm.agents[]` | Set to `"*"` for a global destination that any agent may transfer to, such as a human escalation agent. |
+
+### Inheritance and merge rules
+
+- Every agent inherits root `llm` fields such as `url`, `api_key`, `vendor`, `style`, `params`, and `max_history`.
+- `params` deep-merges with the root `params` object.
+- All other agent-level overrides shallow-replace the root value.
+- An agent can use a different provider/model by overriding `url`, `api_key`, `vendor`, `style`, or `params`.
+- Handoff context, tool captures, and tool-response captures all write to the same flat `variables` namespace.
+
+### Minimal example
+
+```json
+{
+  "llm": {
+    "url": "https://api.openai.com/v1/chat/completions",
+    "api_key": "{{secrets.openai}}",
+    "style": "openai",
+    "params": { "model": "gpt-4o-mini" },
+    "greeting_message": "Hello, how can I help?",
+    "variables": { "caller_number": "+441632960123" },
+    "tools": [{ "name": "lookup_account", "type": "rest" }],
+    "agents": [
+      {
+        "name": "intake",
+        "system_messages": [{ "role": "system", "content": "Verify the caller, then transfer." }],
+        "tools": ["lookup_account"],
+        "handoffs": [{ "to": "account_support", "description": "Caller is verified." }]
+      },
+      {
+        "name": "account_support",
+        "requires": ["customer_id"],
+        "transition_message": null,
+        "system_messages": [{ "role": "system", "content": "Handle the account request." }],
+        "tools": []
+      }
+    ]
+  }
+}
+```
+
 ```json
 {
   "llm": {
