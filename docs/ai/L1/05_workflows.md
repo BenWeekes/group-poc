@@ -25,7 +25,7 @@
 2. Use `eval:engine-replay` for repeatable regression checks through the public route.
 3. Use `eval:simulated-caller` for adaptive counterpart behaviour with controlled phases.
 4. Save reports in `/tmp` or ignored `reports/`.
-5. For the principal comparison, run `eval:150-turn-compare`: 75 caller turns across the four source-derived profiles, replayed identically to the single prompt, immediate team, template-deferred team, and structured-deferred team with GPT-4o-mini at temperature zero.
+5. For the principal comparison, run `eval:150-turn-compare`: 75 caller turns across the four source-derived profiles, replayed identically to the single prompt, immediate team, and template-deferred team with GPT-4o-mini at temperature zero.
 6. Compare pathway, tool calls, transfer count, tool-execution errors, provider latency, actual input-token size per provider pass, history-message count, and tool-schema count.
 
 ## Deploy

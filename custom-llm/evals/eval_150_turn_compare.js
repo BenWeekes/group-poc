@@ -189,7 +189,9 @@ const callerTrace = process.env.CALLER_TRACE_PATH
   : await generateCallerTrace();
 if (callerTrace.length !== 75) throw new Error(`Expected 75 caller turns, generated ${callerTrace.length}`);
 if (process.env.TRACE_OUTPUT_PATH) await fs.writeFile(process.env.TRACE_OUTPUT_PATH, `${JSON.stringify({ caller_trace: callerTrace }, null, 2)}\n`);
-const selectedVariants = new Set((process.env.EVAL_VARIANTS || 'team,deferred,structured,monolithic').split(',').map((value) => value.trim()));
+// The colleague-facing primary benchmark excludes experimental transports.
+// Select `structured` or `inline` explicitly for research-only runs.
+const selectedVariants = new Set((process.env.EVAL_VARIANTS || 'team,deferred,monolithic').split(',').map((value) => value.trim()));
 const variants = {
   team: ['team', configuredTeam],
   deferred: ['team-deferred', configuredDeferredTeam],

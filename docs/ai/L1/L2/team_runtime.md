@@ -18,7 +18,7 @@
 
 Handoffs default to `activation: "immediate"`: after the handoff tool call, the destination receives a provider pass and answers the current caller utterance. A handoff may instead use `activation: "next_user_turn"` plus a fixed `transition_message`. The runtime persists the source tool call, tool result, and transition message in shared history, speaks that message without another provider call, and makes the destination active for the next caller utterance. The session's `pendingHandoff` marker is cleared when that next turn arrives.
 
-An agent may instead set `handoff_protocol.mode` to `response_sidecar`. Its provider completion uses structured JSON with caller-visible `content` and hidden optional `handoff` metadata. The runtime does not expose explicit handoff function schemas for that agent, validates the destination/capture against its declared deferred handoffs, persists the metadata, and schedules the destination without a tool-loop pass.
+Non-standard structured and inline control transports are deliberately excluded from the proposed API and primary results. Their POC notes are in [experimental_handoffs.md](experimental_handoffs.md).
 
 ## Turn sequence
 

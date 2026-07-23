@@ -35,7 +35,9 @@ This reveals tool/prompt/handoff gaps that fixed replay alone can miss. Record s
 
 ## Primary 150-message comparison
 
-`eval:150-turn-compare` is the primary benchmark. It generates one source-derived, history-aware caller trace containing 75 caller turns spread across four independent recording profiles: A-1 18 turns, A-2 18, B-1 18, B-2 21. That trace is replayed unchanged through the immediate team, template-deferred team, structured-deferred team, and a deliberately large single-prompt baseline, producing 150 dialogue messages per variant.
+`eval:150-turn-compare` is the primary benchmark. It generates one source-derived, history-aware caller trace containing 75 caller turns spread across four independent recording profiles: A-1 18 turns, A-2 18, B-1 18, B-2 21. That trace is replayed unchanged through the immediate team, template-deferred team, and a deliberately large single-prompt baseline, producing 150 dialogue messages per variant.
+
+Raw `prompt_tokens` measure context exposure, not billed input after provider caching. Before making a cost or latency claim, record `prompt_tokens_details.cached_tokens`, set a stable cache key where the provider supports it, and repeat each paired variant several times. A stable monolithic prompt may have a cache advantage over changing specialist prompts/tool schemas.
 
 Controls are GPT-4o-mini and temperature zero for every specialist and the baseline, shared private tools, stable streaming request shape, unique call IDs per source call, and global interrupts disabled in both variants. Each provider pass records actual provider input tokens, input character count, bounded-history message count, scoped tool-schema count, completion tokens, latency, handoffs, and tool-execution errors. This makes the comparison about prompt/context and routing architecture rather than provider/model choice.
 

@@ -14,7 +14,7 @@ This directory contains executable fixtures, evaluators, and a small curated his
 | `npm run eval:transcript-user` | `transcript_user_profiles.json` | Preview a history-aware source-derived caller trace |
 | `npm run eval:transcript-user-call` | profile + one `llm` config | Run a history-aware caller against one configuration |
 | `npm run eval:transcript-user-compare` | profile + both configs | Paired adaptive caller runs under same-model controls |
-| `npm run eval:150-turn-compare` | all four profiles + four configs | Primary 75-caller-turn / 150-dialogue-message comparison: single prompt, immediate team, template-deferred team, and structured-deferred team, with per-pass context telemetry |
+| `npm run eval:150-turn-compare` | all four profiles + three configs | Primary 75-caller-turn / 150-dialogue-message comparison: single prompt, immediate team, and template-deferred team, with per-pass context telemetry |
 
 ## Important artefacts
 
@@ -29,6 +29,6 @@ Comparative runs should use the same provider/model, temperature, tool service, 
 
 The deferred team uses `activation: "next_user_turn"` for routine transitions with a pre-authored next question. Its tool call and transition message are retained in shared history, but it does not make a second provider pass until the caller answers. Escalations and cases needing an immediate specialist action remain immediate handoffs.
 
-The Structured Deferred variant uses `handoff_protocol: { "mode": "response_sidecar" }` for the Intake-to-Account transition. It returns caller-visible content plus hidden validated handoff metadata, rather than exposing a handoff function. Use `EVAL_VARIANTS=structured` to run that variant alone against a cached trace; comma-separate `team,deferred,structured,monolithic` to select multiple variants.
+The primary comparison reports raw prompt tokens and tool schemas, not cached-versus-uncached provider input. A cost/latency claim needs `prompt_tokens_details.cached_tokens`, a stable provider cache key, and repeated paired runs; see `docs/ai/L1/L2/experimental_handoffs.md`.
 
 For a repeatable 150-turn rerun across container rebuilds, set `TRACE_OUTPUT_PATH=/app/reports/eval150_trace.json` on the first run, then set `CALLER_TRACE_PATH=/app/reports/eval150_trace.json` on later runs. `reports/` is ignored; commit only the curated summary and observations.

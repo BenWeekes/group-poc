@@ -79,21 +79,3 @@ The compact machine-readable record is [history_150_turn_summary.json](history_1
 3. Label repeated-question, caller-repetition, contradiction, and unsafe-tool events independently of model outputs.
 4. Add a concurrency test for the serialized JSON mock store and replace it with a durable store before any non-POC use.
 5. Safety & Compliance now has official-follow-up and Contact Preference/Human Specialist routes after logging an incident. Rerun the exact cached 150-message trace to measure this fix.
-
-## 2026-07-23 — Structured Deferred Handoff, 150 dialogue messages
-
-**Controls:** cached 75-turn caller trace; GPT-4o-mini; temperature zero; global interrupts disabled; same private tool service. The new mode was applied to the routine Intake → Account Status transition. It uses `handoff_protocol: { "mode": "response_sidecar" }`: the source returns spoken content with hidden validated handoff metadata, rather than an exposed handoff function.
-
-| Metric | Structured Deferred |
-| --- | ---: |
-| HTTP success | 100% |
-| Provider tokens | 119,161 |
-| Mean provider input tokens / pass | 963 |
-| Mean visible tool schemas / pass | 2.19 |
-| Provider passes | 118 |
-| Structured sidecar handoffs | 4 |
-| Mean wall latency / caller turn | 1,929 ms |
-| Expected action coverage within three following caller turns | 90% |
-| Forbidden tool calls / execution errors | 0 / 0 |
-
-**Finding:** the mode worked end-to-end, including right-party verification followed by a hidden deferred handoff. It did not beat Template Deferred Handoff's earlier 1,444 ms mean latency. The JSON response constraint added provider latency and the mode covered only four routine transitions. It remains a useful API option, but not a proven latency improvement; repeat paired runs before treating differences between provider runs as causal.

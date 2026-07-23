@@ -20,8 +20,7 @@ The proposal adds the following optional fields. If `agents` is omitted, behavio
 | `context` | `handoffs[]` | Recent conversation passed to the destination, for example `{ "mode": "user_and_assistant", "max_messages": 12 }`. |
 | `capture` | `handoffs[]` | JSON-schema fields collected at handoff and written to `variables`; required fields block incomplete transfers. |
 | `activation` | `handoffs[]` | `"immediate"` (default) lets the destination reply now; `"next_user_turn"` schedules it after a configured transition question. |
-| `transition_message` | `handoffs[]` | Required for `"next_user_turn"` unless the source uses `response_sidecar`; fixed text spoken by the runtime before the next caller turn. |
-| `handoff_protocol` | `llm.agents[]` | Optional source-agent protocol. `{"mode":"response_sidecar"}` returns hidden handoff metadata alongside spoken content, rather than exposing handoff functions. |
+| `transition_message` | `handoffs[]` | Required for `"next_user_turn"`; fixed text spoken by the runtime before the next caller turn. |
 | `available_from` | `llm.agents[]` | Set to `"*"` for a global destination that any agent may transfer to, such as a human escalation agent. |
 
 ### Inheritance and merge rules
@@ -48,43 +47,6 @@ For a known next question, a handoff can defer activation without another provid
 ```
 
 The runtime records the handoff tool call, its capture, and the fixed transition message in the shared history, then sets `payment_options` as the active agent. That agent receives the caller's answer on the next turn. Use immediate handoff where the current utterance requires specialist reasoning or a specialist tool now.
-
-### Structured Deferred Handoff (`response_sidecar`)
-
-For an agent whose configured handoffs are all deferred, `handoff_protocol` can avoid an LLM function call entirely. The source model emits a structured response; ConvoAI speaks only `content` and keeps `handoff` as internal session metadata.
-
-```json
-{
-  "name": "outbound_intake",
-  "handoff_protocol": { "mode": "response_sidecar" },
-  "handoffs": [
-    {
-      "to": "account_status",
-      "activation": "next_user_turn",
-      "description": "Right-party verification is complete."
-    }
-  ]
-}
-```
-
-The Custom LLM requests this internal upstream response shape:
-
-```json
-{
-  "content": "Thank you. What would you like help with today?",
-  "handoff": {
-    "to": "account_status",
-    "activation": "next_user_turn",
-    "capture": { "right_party_verified": true, "customer_id": "cust_123" }
-  }
-}
-```
-
-`content` is the only caller-visible text. The runtime validates the destination against the current agent's declared handoffs, validates `capture`, saves the event in the shared history, and starts `account_status` on the next caller utterance. This mode supports `next_user_turn` only; use normal function handoffs for immediate transfers or agents that need to call a specialist tool now.
-
-### Inline Control Handoff (experiment)
-
-`"handoff_protocol": { "mode": "inline_control" }` is an experimental transport for the same deferred outcome. The model appends a final `{{handoff:{...}}}` trailer; the runtime removes it before speech and applies identical validation. It avoids JSON response mode but is less robust than Structured Deferred Handoff, so it is for evaluation only and is not a proposed public API field.
 
 ### Minimal example
 
@@ -529,7 +491,6 @@ The Custom LLM requests this internal upstream response shape:
     "agents": [
       {
         "name": "outbound_intake",
-        "handoff_protocol": { "mode": "response_sidecar" },
         "max_history": 10,
         "params": {
           "temperature": 0

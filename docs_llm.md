@@ -80,23 +80,6 @@ Deferred handoffs require a fixed, destination-appropriate `transition_message`.
 }
 ```
 
-### Structured Deferred Handoff (`response_sidecar`)
-
-An agent can declare `"handoff_protocol": { "mode": "response_sidecar" }` when its declared handoffs are deferred. The Custom LLM then requests a structured upstream response with `content` and an optional `handoff`, rather than exposing `handoff_to_*` functions. It speaks only `content`, validates and persists the hidden handoff, and activates the destination on the next caller utterance. This removes function-schema and tool-loop overhead but does not remove the source model call that chooses the destination.
-
-```json
-{
-  "content": "What amount could you realistically pay, and on which date?",
-  "handoff": {
-    "to": "payment_options",
-    "activation": "next_user_turn",
-    "capture": { "intent": "payment_arrangement" }
-  }
-}
-```
-
-This is an internal Custom LLM response schema, never text delivered to the caller. The runtime permits only destinations declared by the source agent and only `next_user_turn` activation. Immediate transfer remains a normal handoff function because the destination must generate the current reply.
-
 `available_from: "*"` makes a destination globally reachable, but it must not mean “always transfer here.” The runtime may expose a global handoff only when the current caller turn matches its stated criterion; critical global intents should also be intercepted deterministically before a model chooses a function.
 
 ## Tool definition

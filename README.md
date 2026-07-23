@@ -2,6 +2,8 @@
 
 This repository is a proposal and working evaluation for an Agora team-of-agents capability. It explores how one ConvoAI session can transfer between specialist agents, preserve context, scope tools, and measure the result against a single-prompt baseline.
 
+The shareable proposal supports two handoff timings: **Immediate Handoff** and **Template Deferred Handoff**. Alternative structured/inline control transports are retained only as non-recommended research notes in `docs/ai` and are excluded from the API proposal and headline results.
+
 Debt recovery is the working evaluation domain because it produces realistic routing pressure: identity verification, payment options, payment failures, hardship, disputes, communication preferences, and escalation. The architecture is intentionally reusable for other Agora agent-team use cases.
 
 ## Documentation
