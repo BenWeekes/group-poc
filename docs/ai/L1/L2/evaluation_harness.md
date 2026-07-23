@@ -29,7 +29,7 @@ This reveals tool/prompt/handoff gaps that fixed replay alone can miss. Record s
 
 `eval:compare` runs the same 28 replay turns through the team fixture and a one-agent fixture with the full prompt and all ten tools. The baseline is deliberately a single team-runtime agent so both variants use the same endpoint, tool service, SSE mode, session handling, and provider API. `TEAM_FORCE_ROOT_PROVIDER=true` removes agent-level provider overrides for an architecture-only run.
 
-`team_comparison.md` records both a mixed-provider run and a controlled GPT-4o-mini run. The controlled run used fewer team tokens and had higher labelled critical-tool coverage, but the team had higher per-turn latency. Treat it as reproducible POC evidence, not a production conclusion.
+`team_comparison.md` records the latest completed three-way GPT-4o-mini run: Single Prompt, Immediate Handoff, and Template Deferred Handoff. It reports lower team context/tool exposure, but does not establish that teams are more accurate or faster overall. Treat it as reproducible POC evidence, not a production conclusion.
 
 `eval:complex-compare` is a stricter seven-turn test with the same provider/model, temperature zero, shared tools, and global interrupts disabled in both variants. It is designed to cross multiple tool and policy boundaries. It found and then regression-tested a Payment Options prompt defect, so its final tie is evidence about token/tool scope rather than a claim of general superiority.
 
@@ -39,7 +39,7 @@ This reveals tool/prompt/handoff gaps that fixed replay alone can miss. Record s
 
 Raw `prompt_tokens` measure context exposure, not billed input after provider caching. Before making a cost or latency claim, record `prompt_tokens_details.cached_tokens`, set a stable cache key where the provider supports it, and repeat each paired variant several times. A stable monolithic prompt may have a cache advantage over changing specialist prompts/tool schemas.
 
-Controls are GPT-4o-mini and temperature zero for every specialist and the baseline, shared private tools, stable streaming request shape, unique call IDs per source call, and global interrupts disabled in both variants. Each provider pass records actual provider input tokens, input character count, bounded-history message count, scoped tool-schema count, completion tokens, latency, handoffs, and tool-execution errors. This makes the comparison about prompt/context and routing architecture rather than provider/model choice.
+Controls are GPT-4o-mini and temperature zero for every specialist and the baseline, shared private tools, stable streaming request shape, unique call IDs per source call, and global interrupts disabled in all three variants. Each provider pass records actual provider input tokens, input character count, bounded-history message count, scoped tool-schema count, completion tokens, latency, handoffs, and tool-execution errors. This makes the comparison about prompt/context and routing architecture rather than provider/model choice.
 
 ## Transcript-grounded caller emulator
 

@@ -96,21 +96,11 @@ This run took four provider turns for verification/account status, three for the
 
 The current evaluation suite passes 12 of 12 routing cases. Its deterministic router averaged roughly 0.18 ms; the specialist prompt estimate was about 21.6 tokens per route compared with an 88-token monolithic baseline. This measures the POC routing layer, not end-to-end LLM quality or live-call latency.
 
-### Controlled live comparison
+### Current three-way comparison
 
-The POC also ran the same 28 transcript-derived caller turns through two real GPT-4o-mini configurations: the nine-agent team and a single agent with the full prompt and all ten tools. Both completed every request. The team used 41,139 provider tokens against 51,170 for the single prompt (19.6% fewer), achieved 100% labelled critical-tool coverage against 87.5%, and made no extra tool call during four verification turns. The single prompt selected an unnecessary cease-contact tool after every verification turn.
+The current fixed-trace benchmark compares Single Prompt, Immediate Handoff, and Template Deferred Handoff over 75 caller turns / 150 dialogue messages. It uses GPT-4o-mini at temperature zero for every variant, the same mock tools, and the same source-derived caller trace.
 
-The trade-off is latency: the team averaged 2,504 ms per caller turn versus 1,860 ms for one prompt (34.6% slower). A handoff sometimes requires another model pass. The evidence therefore supports scoped prompts and tools for reliability and token exposure, but it does **not** support claiming that teams automatically reduce end-to-end voice latency. Full per-run methodology and a mixed-model result are in [team_comparison.md](team_comparison.md).
-
-A stricter seven-turn same-model test also moved through payment investigation, official follow-up, payment options, promise-to-pay, hardship, and cease-contact with runtime global interrupts disabled for both designs. Both completed the required actions after the team prompt was fixed; the team used 9.5% fewer tokens and avoided an unnecessary baseline tool call, but averaged 48.1% higher latency. This shows where teams can help, but is not a proof of universal superiority.
-
-### Primary 150-message comparison
-
-The primary same-model benchmark now uses 75 source-derived caller turns across the four supplied recordings, producing 150 dialogue messages per variant. It used GPT-4o-mini for every specialist and the single prompt, temperature zero, the same caller trace, shared tools, and per-pass provider telemetry.
-
-The team averaged **925 actual provider input tokens per pass** versus **1,305** for the single prompt (**29.1% lower**), with **2.0** visible tool schemas versus **10.0**. Total provider tokens were **22.4% lower**. History size was nearly identical (19.4 versus 19.2 messages), so the reduction comes from scoped prompts and tools, not simply dropping more conversation.
-
-The latest fixed-trace comparison evaluates Single Prompt, Immediate Handoff, and Template Deferred Handoff side by side. It shows lower context and tool exposure for teams, while the single prompt retains the best same-turn action coverage in this run. See the current tables and controls in [important_runs.md](custom-llm/evals/important_runs.md).
+Template Deferred Handoff has the lowest team context and tool exposure, and avoids a destination LLM call on its handoff turn. Single Prompt has the best measured same-turn coverage in this run. See [team_comparison.md](team_comparison.md) for the current table and [Evaluation results](custom-llm/evals/important_runs.md) for the controls and limitations.
 
 ## Next evaluation steps
 

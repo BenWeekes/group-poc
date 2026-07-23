@@ -11,7 +11,7 @@ Debt recovery is the working evaluation domain because it produces realistic rou
 - [Debt-recovery agent team and workflow model](agent_team.md)
 - [Proposed Agora session configuration](agent_team_join.md)
 - [Developer API: multi-agent `llm` capability](docs_llm.md)
-- [Live team versus single-prompt comparison](team_comparison.md)
+- [Current three-way team comparison](team_comparison.md)
 - [AI-oriented repository docs](docs/ai/L0_repo_card.md)
 
 ## POC components
