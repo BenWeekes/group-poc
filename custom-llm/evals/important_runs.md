@@ -27,6 +27,8 @@ All runs use mock data and deidentified English caller language derived from the
 | Mean wall latency / caller turn | **1,276 ms** | 1,798 ms | 1,444 ms |
 | Mean provider latency / pass | **801 ms** | 1,038 ms | 947 ms |
 
+Immediate Handoff's 98.7% HTTP success represents one 500 response: an `employee_a_2` contact-limit turn exceeded the five-pass tool-loop limit, not a provider timeout. Global interrupts were disabled for every variant in this architecture-only comparison. In particular, do not treat Template Deferred's six logic-error turns or two tool errors as a production safety rate; the interrupt layer was deliberately excluded.
+
 ### Findings
 
 - Both team designs reduced model input versus the single prompt. Template Deferred used 34% fewer total provider tokens and exposed 80% fewer tool schemas per pass.

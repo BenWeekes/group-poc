@@ -10,7 +10,7 @@ ConvoAI owns the session, shared variables, handoffs, tool execution, and direct
 | --- | --- | --- |
 | `variables` | `llm.variables` | Initial shared session state. Agents read values as `{{vars.name}}`; tools and handoffs can update them. |
 | `tools` | `llm.tools` | Shared tool library. Define each tool once. |
-| `agents` | `llm.agents` | Ordered agent definitions. The first agent is the entry agent and owns `greeting_message`. |
+| `agents` | `llm.agents` | Ordered agent definitions. The first agent is the entry agent. The existing root `llm.greeting_message` is spoken once when the session joins. |
 | `name` | `llm.agents[]` | Unique identifier used by handoffs. |
 | `requires` | `llm.agents[]` | Variables required before this agent may become active. |
 | `tools` | `llm.agents[]` | Allow-list of tool names from `llm.tools`. An agent sees only these tools. |
@@ -31,6 +31,7 @@ Each agent inherits root `llm` settings such as `url`, `api_key`, `vendor`, `sty
 - Other agent-level values replace the root value.
 - An agent may select a different LLM by overriding `url`, `api_key`, `vendor`, `style`, or `params`.
 - All captures write to the same flat `variables` object.
+- `handoff.context` defines the proposed destination-context contract. The reference implementation currently bounds shared history with the destination agent's `max_history`; it does not yet apply the per-handoff `context` value.
 
 ## Handoff activation
 
@@ -111,7 +112,7 @@ Use Template Deferred Handoff only when that fixed question is an appropriate re
         },
         "request": {
           "method": "GET",
-          "url": "https://api.example.com/v1/accounts/{{vars.customer_id}}",
+          "url": "https://api.example.com/v1/accounts?phone={{vars.caller_number}}",
           "timeout_ms": 3000
         },
         "response": {
@@ -129,7 +130,7 @@ Use Template Deferred Handoff only when that fixed question is an appropriate re
         "system_messages": [
           {
             "role": "system",
-            "content": "Verify the caller, then identify what they need. Do not answer account questions yourself."
+            "content": "Identify whether the caller needs account information or a payment arrangement. Do not answer account questions yourself."
           }
         ],
         "tools": [],
@@ -137,33 +138,18 @@ Use Template Deferred Handoff only when that fixed question is an appropriate re
           {
             "to": "account_status",
             "activation": "immediate",
-            "description": "Caller is verified and asks about their account.",
-            "capture": {
-              "type": "object",
-              "properties": {
-                "customer_id": { "type": "string" }
-              },
-              "required": ["customer_id"]
-            }
+            "description": "Caller asks about their account."
           },
           {
             "to": "payment_options",
             "activation": "next_user_turn",
             "transition_message": "What amount could you realistically pay, and on which date?",
-            "description": "Caller asks for a payment arrangement.",
-            "capture": {
-              "type": "object",
-              "properties": {
-                "customer_id": { "type": "string" }
-              },
-              "required": ["customer_id"]
-            }
+            "description": "Caller asks for a payment arrangement."
           }
         ]
       },
       {
         "name": "account_status",
-        "requires": ["customer_id"],
         "system_messages": [
           {
             "role": "system",
@@ -175,7 +161,6 @@ Use Template Deferred Handoff only when that fixed question is an appropriate re
       },
       {
         "name": "payment_options",
-        "requires": ["customer_id"],
         "system_messages": [
           {
             "role": "system",
