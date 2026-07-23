@@ -51,6 +51,11 @@ function configuredStructuredDeferredTeam() {
   intake.handoff_protocol = { mode: 'response_sidecar' };
   return llm;
 }
+function configuredInlineControlTeam() {
+  const llm = configuredDeferredTeam();
+  llm.agents.find((agent) => agent.name === 'outbound_intake').handoff_protocol = { mode: 'inline_control' };
+  return llm;
+}
 function configuredMonolithic() {
   const llm = structuredClone(monolithicTemplate);
   llm.enable_global_interrupts = false;
@@ -189,6 +194,7 @@ const variants = {
   team: ['team', configuredTeam],
   deferred: ['team-deferred', configuredDeferredTeam],
   structured: ['team-structured-deferred', configuredStructuredDeferredTeam],
+  inline: ['team-inline-control', configuredInlineControlTeam],
   monolithic: ['monolithic', configuredMonolithic]
 };
 const report = { endpoint, controls: { provider: 'gpt-4o-mini', temperature: 0, team_model_overrides: false, global_interrupts: false, same_75_turn_caller_trace: true }, caller_trace: callerTrace };

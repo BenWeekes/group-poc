@@ -82,6 +82,10 @@ The Custom LLM requests this internal upstream response shape:
 
 `content` is the only caller-visible text. The runtime validates the destination against the current agent's declared handoffs, validates `capture`, saves the event in the shared history, and starts `account_status` on the next caller utterance. This mode supports `next_user_turn` only; use normal function handoffs for immediate transfers or agents that need to call a specialist tool now.
 
+### Inline Control Handoff (experiment)
+
+`"handoff_protocol": { "mode": "inline_control" }` is an experimental transport for the same deferred outcome. The model appends a final `{{handoff:{...}}}` trailer; the runtime removes it before speech and applies identical validation. It avoids JSON response mode but is less robust than Structured Deferred Handoff, so it is for evaluation only and is not a proposed public API field.
+
 ### Minimal example
 
 ```json

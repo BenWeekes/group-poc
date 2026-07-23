@@ -10,6 +10,7 @@ const GLOBAL_INTERRUPTS = [
   { agent: 'hardship_support', pattern: /\b(can't sleep|cannot sleep|affecting my sleep|humiliated|despair|suicid|kill myself|hurt myself|panic|can't cope)\b/i },
   { agent: 'safety_compliance', pattern: /\b(wechat|qq|qr ?code|personal account|social media|banking app|wallet app|screen ?share)\b/i }
 ];
+function isControlProtocol(agent) { return ['response_sidecar', 'inline_control'].includes(agent.handoff_protocol?.mode); }
 
 function deepMergeParams(root = {}, override = {}) { return { ...root, ...override }; }
 export function render(value, variables = {}, secrets = {}) {
@@ -91,7 +92,7 @@ export function scopedFunctions(session, secrets) {
     result.push({ type: 'function', function: { name, description: tool.description || name, parameters: tool.parameters || { type: 'object', properties: {} } } });
     names.add(name);
   }
-  if (agent.handoff_protocol?.mode !== 'response_sidecar') {
+  if (!isControlProtocol(agent)) {
     for (const handoff of agent.handoffs || []) {
       const name = `handoff_to_${handoff.to}`;
       result.push({ type: 'function', function: { name, description: handoff.description, parameters: handoff.capture || { type: 'object', properties: {} } } });
@@ -170,6 +171,9 @@ function systemMessages(session, secrets) {
       role: 'system',
       content: `Return JSON only: {"content":"spoken reply","handoff":null} or {"content":"spoken reply","handoff":{"to":"destination","activation":"next_user_turn","capture":{}}}. The caller hears only content. You may choose only these destinations: ${destinations || 'none'}. A sidecar handoff is for the next caller turn only; use null when no handoff is needed.`
     });
+  } else if (agent.handoff_protocol?.mode === 'inline_control') {
+    const destinations = (agent.handoffs || []).map((handoff) => handoff.to).join(', ');
+    messages.push({ role: 'system', content: `Write the caller-visible reply first. To schedule a deferred handoff, append exactly one final control trailer: {{handoff:{"to":"destination","activation":"next_user_turn","capture":{}}}}. The runtime removes this trailer before speech. You may choose only: ${destinations || 'none'}. If no handoff is needed, do not append a trailer.` });
   }
   return messages;
 }
@@ -192,6 +196,13 @@ async function providerCompletion(agent, messages, tools, toolChoice = 'auto', u
 }
 
 function sidecarResponse(choice, agent) {
+  if (agent.handoff_protocol?.mode === 'inline_control') {
+    const match = (choice.content || '').match(/\s*\{\{handoff:(\{[\s\S]*\})\}\}\s*$/);
+    if (!match) return { content: choice.content || '', handoff: null };
+    let handoff;
+    try { handoff = JSON.parse(match[1]); } catch { throw new Error('Inline-control handoff has invalid JSON'); }
+    return { content: (choice.content || '').slice(0, match.index).trim(), handoff };
+  }
   if (agent.handoff_protocol?.mode !== 'response_sidecar') return null;
   let parsed;
   try { parsed = JSON.parse(choice.content || ''); }
@@ -244,7 +255,7 @@ export async function runTeamTurn(session, userText) {
     };
     trace.push(traceEntry);
     if (!choice.tool_calls?.length) {
-      const sidecar = useResponseSidecar ? sidecarResponse(choice, agent) : null;
+      const sidecar = (useResponseSidecar || agent.handoff_protocol?.mode === 'inline_control') ? sidecarResponse(choice, agent) : null;
       if (sidecar?.handoff) {
         const { to, activation, capture = {} } = sidecar.handoff;
         if (activation !== 'next_user_turn') throw new Error('Response-sidecar handoff activation must be next_user_turn');
@@ -256,7 +267,7 @@ export async function runTeamTurn(session, userText) {
         }
         const result = await executeTeamTool(session, `handoff_to_${to}`, completeCapture, secrets, { transitionMessage: sidecar.content });
         if (!result.scheduled) throw new Error(`Response-sidecar handoff was not scheduled: ${to}`);
-        traceEntry.response_sidecar_handoff = { destination: to, activation, capture_keys: Object.keys(completeCapture) };
+        traceEntry.response_sidecar_handoff = { protocol: agent.handoff_protocol.mode, destination: to, activation, capture_keys: Object.keys(completeCapture) };
         session.history.push({ role: 'assistant', content: sidecar.content, group_poc: { handoff: { from: agent.name, to, activation, capture: completeCapture } } });
         return { content: sidecar.content, activeAgent: session.activeAgent, usage, trace, variables: session.variables, pendingHandoff: session.pendingHandoff };
       }
