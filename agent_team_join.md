@@ -48,6 +48,8 @@ For a known next question, a handoff can defer activation without another provid
 
 The runtime records the handoff tool call, its capture, and the fixed transition message in the shared history, then sets `payment_options` as the active agent. That agent receives the caller's answer on the next turn. Use immediate handoff where the current utterance requires specialist reasoning or a specialist tool now.
 
+`"next_user_turn"` is only for routine, non-urgent routing. A handoff to a global interruption agent (`"available_from": "*"`), including hardship, contact-preference, safety/compliance, or human escalation, must be immediate. This ensures the destination can record the required action and respond to the triggering utterance without waiting for another caller turn.
+
 ### Minimal example
 
 ```json

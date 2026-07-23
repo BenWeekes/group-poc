@@ -33,6 +33,8 @@
 | `handoff.activation` | `immediate` (default) or `next_user_turn` |
 | `handoff.transition_message` | required fixed question/message for a deferred handoff |
 
+`next_user_turn` is reserved for routine routing. A destination with `available_from: "*"` is a global interruption agent and must use immediate activation.
+
 See `docs_llm.md` and `agent_team_join.md` for the full proposal.
 
 ## Internal tools

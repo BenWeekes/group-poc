@@ -139,6 +139,11 @@ export async function executeTeamTool(session, name, args, secrets, options = {}
     Object.assign(session.variables, args);
     const activation = handoff?.activation || 'immediate';
     if (!['immediate', 'next_user_turn'].includes(activation)) throw new Error(`Unsupported handoff activation: ${activation}`);
+    // Global destinations are interrupt paths. Deferring them could postpone
+    // a cease-contact record, hardship case, safety incident, or human review.
+    if (activation === 'next_user_turn' && destinationAgent?.available_from === '*') {
+      throw new Error(`Deferred handoff to global agent ${destination} is not permitted`);
+    }
     const transitionMessage = activation === 'next_user_turn'
       ? (options.transitionMessage || render(handoff?.transition_message || destinationAgent?.deferred_transition_message || '', session.variables, secrets))
       : null;
@@ -182,6 +187,18 @@ export function boundedHistory(history, maxHistory) {
   while (start > 0 && history[start]?.role === 'tool') start -= 1;
   return history.slice(start);
 }
+// Session history also carries runtime-only annotations. Providers receive
+// only standard Chat Completions message fields.
+function providerMessage(message) {
+  const clean = { role: message.role, content: message.content ?? null };
+  if (message.name !== undefined) clean.name = message.name;
+  if (message.tool_call_id !== undefined) clean.tool_call_id = message.tool_call_id;
+  if (message.tool_calls !== undefined) clean.tool_calls = message.tool_calls;
+  return clean;
+}
+export function providerHistory(history, maxHistory) {
+  return boundedHistory(history, maxHistory).map(providerMessage);
+}
 async function providerCompletion(agent, messages, tools, toolChoice = 'auto', useResponseSidecar = true) {
   if (!ALLOWED_PROVIDER_URLS.has(agent.url)) throw new Error(`Provider URL is not allowlisted: ${agent.url}`);
   const body = { ...agent.params, messages, tools, tool_choice: toolChoice, stream: false };
@@ -200,15 +217,16 @@ function sidecarResponse(choice, agent) {
     const match = (choice.content || '').match(/\s*\{\{handoff:(\{[\s\S]*\})\}\}\s*$/);
     if (!match) return { content: choice.content || '', handoff: null };
     let handoff;
-    try { handoff = JSON.parse(match[1]); } catch { throw new Error('Inline-control handoff has invalid JSON'); }
+    try { handoff = JSON.parse(match[1]); }
+    catch { return { content: choice.content || '', handoff: null, parse_error: 'Inline-control handoff has invalid JSON' }; }
     return { content: (choice.content || '').slice(0, match.index).trim(), handoff };
   }
   if (agent.handoff_protocol?.mode !== 'response_sidecar') return null;
   let parsed;
   try { parsed = JSON.parse(choice.content || ''); }
-  catch { throw new Error('Response-sidecar agent returned invalid JSON'); }
-  if (!parsed || typeof parsed.content !== 'string' || !Object.hasOwn(parsed, 'handoff')) throw new Error('Response-sidecar response requires content and handoff');
-  if (parsed.handoff !== null && (typeof parsed.handoff !== 'object' || Array.isArray(parsed.handoff))) throw new Error('Response-sidecar handoff must be an object or null');
+  catch { return { content: choice.content || '', handoff: null, parse_error: 'Response-sidecar agent returned invalid JSON' }; }
+  if (!parsed || typeof parsed.content !== 'string' || !Object.hasOwn(parsed, 'handoff')) return { content: choice.content || '', handoff: null, parse_error: 'Response-sidecar response requires content and handoff' };
+  if (parsed.handoff !== null && (typeof parsed.handoff !== 'object' || Array.isArray(parsed.handoff))) return { content: choice.content || '', handoff: null, parse_error: 'Response-sidecar handoff must be an object or null' };
   return parsed;
 }
 
@@ -228,7 +246,7 @@ export async function runTeamTurn(session, userText) {
   for (let pass = 0; pass < MAX_TOOL_PASSES; pass += 1) {
     const agent = effectiveAgent(session, secrets);
     const tools = scopedFunctions(session, secrets);
-    const messages = [...systemMessages(session, secrets), ...boundedHistory(session.history, agent.max_history)];
+    const messages = [...systemMessages(session, secrets), ...providerHistory(session.history, agent.max_history)];
     const toolChoice = !session.variables.right_party_verified && tools.some((tool) => tool.function.name === 'verify_right_party')
       ? { type: 'function', function: { name: 'verify_right_party' } }
       : 'auto';
@@ -256,20 +274,27 @@ export async function runTeamTurn(session, userText) {
     trace.push(traceEntry);
     if (!choice.tool_calls?.length) {
       const sidecar = (useResponseSidecar || agent.handoff_protocol?.mode === 'inline_control') ? sidecarResponse(choice, agent) : null;
+      if (sidecar?.parse_error) traceEntry.control_protocol_error = sidecar.parse_error;
       if (sidecar?.handoff) {
-        const { to, activation, capture = {} } = sidecar.handoff;
-        if (activation !== 'next_user_turn') throw new Error('Response-sidecar handoff activation must be next_user_turn');
-        const handoff = (agent.handoffs || []).find((item) => item.to === to);
-        if (!handoff || handoff.activation !== 'next_user_turn') throw new Error(`Response-sidecar destination is not configured for deferred handoff: ${to}`);
-        const completeCapture = { ...capture };
-        for (const field of handoff.capture?.required || []) {
-          if ((completeCapture[field] === undefined || completeCapture[field] === '') && session.variables[field] !== undefined) completeCapture[field] = session.variables[field];
+        try {
+          const { to, activation, capture = {} } = sidecar.handoff;
+          if (activation !== 'next_user_turn') throw new Error('Response-sidecar handoff activation must be next_user_turn');
+          const handoff = (agent.handoffs || []).find((item) => item.to === to);
+          if (!handoff || handoff.activation !== 'next_user_turn') throw new Error(`Response-sidecar destination is not configured for deferred handoff: ${to}`);
+          const completeCapture = { ...capture };
+          for (const field of handoff.capture?.required || []) {
+            if ((completeCapture[field] === undefined || completeCapture[field] === '') && session.variables[field] !== undefined) completeCapture[field] = session.variables[field];
+          }
+          const result = await executeTeamTool(session, `handoff_to_${to}`, completeCapture, secrets, { transitionMessage: sidecar.content });
+          if (!result.scheduled) throw new Error(`Response-sidecar handoff was not scheduled: ${to}`);
+          traceEntry.response_sidecar_handoff = { protocol: agent.handoff_protocol.mode, destination: to, activation, capture_keys: Object.keys(completeCapture) };
+          session.history.push({ role: 'assistant', content: sidecar.content, group_poc: { handoff: { from: agent.name, to, activation, capture: completeCapture } } });
+          return { content: sidecar.content, activeAgent: session.activeAgent, usage, trace, variables: session.variables, pendingHandoff: session.pendingHandoff, activatedDeferredHandoff };
+        } catch (error) {
+          // Experimental control output must never turn an otherwise usable
+          // reply into a voice-call failure.
+          traceEntry.control_protocol_error = error.message;
         }
-        const result = await executeTeamTool(session, `handoff_to_${to}`, completeCapture, secrets, { transitionMessage: sidecar.content });
-        if (!result.scheduled) throw new Error(`Response-sidecar handoff was not scheduled: ${to}`);
-        traceEntry.response_sidecar_handoff = { protocol: agent.handoff_protocol.mode, destination: to, activation, capture_keys: Object.keys(completeCapture) };
-        session.history.push({ role: 'assistant', content: sidecar.content, group_poc: { handoff: { from: agent.name, to, activation, capture: completeCapture } } });
-        return { content: sidecar.content, activeAgent: session.activeAgent, usage, trace, variables: session.variables, pendingHandoff: session.pendingHandoff };
       }
       const content = sidecar?.content || choice.content || agent.failure_message || 'Sorry, something went wrong.';
       session.history.push({ role: 'assistant', content });
@@ -290,7 +315,7 @@ export async function runTeamTurn(session, userText) {
       // This assistant message is deliberately persisted with the tool call and result.
       // The next caller turn sees the destination as active while retaining the full shared history.
       session.history.push({ role: 'assistant', content, group_poc: { handoff: { from: agent.name, to: deferredHandoff.destination, activation: 'next_user_turn' } } });
-      return { content, activeAgent: session.activeAgent, usage, trace, variables: session.variables, pendingHandoff: session.pendingHandoff };
+      return { content, activeAgent: session.activeAgent, usage, trace, variables: session.variables, pendingHandoff: session.pendingHandoff, activatedDeferredHandoff };
     }
   }
   throw new Error(`Tool loop exceeded ${MAX_TOOL_PASSES} passes`);

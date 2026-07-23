@@ -1,17 +1,16 @@
 import express from 'express';
 import crypto from 'node:crypto';
+import { pathToFileURL } from 'node:url';
 import { AGENTS } from './agents.js';
 import { routeTurn, extractOffer } from './router.js';
 import { callTool, suggestedTool } from './tool_client.js';
 import { createTeamSession, runTeamTurn } from './team_runtime.js';
 
-const app = express();
-app.use(express.json({ limit: '1mb' }));
 const sessions = new Map();
 const teamSessions = new Map();
 const port = Number(process.env.PORT || 8110);
 const sessionTtlMs = Number(process.env.SESSION_TTL_MS || 30 * 60 * 1000);
-const inboundApiKey = process.env.GROUP_POC_API_KEY || '';
+function inboundApiKey() { return process.env.GROUP_POC_API_KEY || ''; }
 
 function contextKey(context = {}) {
   const callId = context.call_id || context.callId || context.call_uuid || '';
@@ -24,7 +23,8 @@ function pruneSessions() {
 }
 function authorised(req) {
   const supplied = req.get('x-group-poc-api-key') || '';
-  return Boolean(inboundApiKey) && supplied.length === inboundApiKey.length && crypto.timingSafeEqual(Buffer.from(supplied), Buffer.from(inboundApiKey));
+  const expected = inboundApiKey();
+  return Boolean(expected) && supplied.length === expected.length && crypto.timingSafeEqual(Buffer.from(supplied), Buffer.from(expected));
 }
 
 function sessionFor(context = {}) {
@@ -68,8 +68,11 @@ function completion(res, req, content, agent, metrics) {
   res.write(`data: ${JSON.stringify({ ...body, object: 'chat.completion.chunk', choices: [{ index: 0, delta: { role: 'assistant', content }, finish_reason: 'stop' }] })}\n\n`); res.end('data: [DONE]\n\n');
 }
 
-app.get('/ping', (_req, res) => res.json({ message: 'pong' }));
-app.post('/chat/completions', async (req, res) => {
+export function createApp() {
+  const app = express();
+  app.use(express.json({ limit: '1mb' }));
+  app.get('/ping', (_req, res) => res.json({ message: 'pong' }));
+  app.post('/chat/completions', async (req, res) => {
   try {
     if (!authorised(req)) return res.status(401).json({ error: { message: 'unauthorised', type: 'authentication_error' } });
     pruneSessions();
@@ -107,5 +110,11 @@ app.post('/chat/completions', async (req, res) => {
     try { content = await askUpstream(req, route.agent, text, toolResult); } catch (error) { console.warn(`upstream unavailable: ${error.message}`); }
     completion(res, req, content || fallback(route.agent, toolResult), route.agent, { safety_gate: route.safetyGate, route_latency_ms: route.routeLatencyMs, tool: toolName, tool_latency_ms: toolLatencyMs, specialist_prompt_tokens_estimate: route.specialistPromptTokens, monolithic_prompt_tokens_estimate: route.monolithicPromptTokens });
   } catch (error) { res.status(500).json({ error: { message: error.message, type: 'group_poc_error' } }); }
-});
-app.listen(port, () => console.log(`custom LLM listening on ${port}`));
+  });
+  return app;
+}
+
+export const app = createApp();
+if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
+  app.listen(port, () => console.log(`custom LLM listening on ${port}`));
+}

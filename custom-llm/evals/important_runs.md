@@ -1,5 +1,7 @@
 # Important evaluation runs
 
+> **Recording status (2026-07-23):** the metrics below predate the current template-deferred runtime and global-handoff guard. They remain useful baseline evidence, but are not results for the current three-way configuration. A cached-trace rerun is required before publishing a deferred-team headline.
+
 All conversations below use mock data and deidentified English caller language. The translated recordings do not reliably identify speakers, so transcript-grounded cases are caller-side emulations rather than verbatim transcripts.
 
 ## 2026-07-22 — controlled 28-turn replay

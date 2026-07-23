@@ -2,7 +2,7 @@
 
 This is a live, reproducible POC comparison, not a production performance claim. Both variants replay the same 28 deidentified caller turns through the public Custom LLM endpoint and the same file-backed tools. The team uses scoped specialist prompts and explicit handoffs; the baseline is one agent with the complete prompt and all ten tools.
 
-> The current primary comparison is the [150-dialogue-message run](custom-llm/evals/important_runs.md#2026-07-22--primary-150-dialogue-message-same-model-run), which uses GPT-4o-mini for every specialist and the baseline. The older mixed-provider result below is retained only as history.
+> The latest recorded baseline is the [150-dialogue-message run](custom-llm/evals/important_runs.md#2026-07-22--primary-150-dialogue-message-same-model-run), which uses GPT-4o-mini for every specialist and the baseline. It predates the template-deferred runtime; the older mixed-provider result below is retained only as history.
 
 ## First live run — mixed specialist models
 
