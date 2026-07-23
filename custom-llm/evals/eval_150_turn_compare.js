@@ -10,6 +10,7 @@ process.on('uncaughtException', async (error) => {
 });
 
 const endpoint = process.env.CUSTOM_LLM_URL || 'https://sa-dev.agora.io/group-poc/llm/chat/completions';
+const requestTimeoutMs = Number(process.env.EVAL_REQUEST_TIMEOUT_MS || 30000);
 const profileNames = ['employee_a_1', 'employee_a_2', 'employee_b_1', 'employee_b_2'];
 const teamTemplate = JSON.parse(await fs.readFile(new URL('./debt_recovery_team_llm.json', import.meta.url), 'utf8'));
 const monolithicTemplate = JSON.parse(await fs.readFile(new URL('./monolithic_debt_recovery_llm.json', import.meta.url), 'utf8'));
@@ -128,7 +129,7 @@ async function runVariant(name, llm, callerTrace) {
     let response;
     let body;
     try {
-      response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json', 'x-group-poc-api-key': process.env.GROUP_POC_API_KEY || '' }, body: JSON.stringify({ model: 'gpt-4o-mini', llm, context, messages: [{ role: 'user', content: item.caller }], stream: true }) });
+      response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json', 'x-group-poc-api-key': process.env.GROUP_POC_API_KEY || '' }, body: JSON.stringify({ model: 'gpt-4o-mini', llm, context, messages: [{ role: 'user', content: item.caller }], stream: true }), signal: AbortSignal.timeout(requestTimeoutMs) });
       body = parseResponse(await response.text());
     } catch (error) {
       response = { status: 599 };
@@ -199,11 +200,14 @@ const variants = {
   inline: ['team-inline-control', configuredInlineControlTeam],
   monolithic: ['monolithic', configuredMonolithic]
 };
-const report = { endpoint, controls: { provider: 'gpt-4o-mini', temperature: 0, team_model_overrides: false, global_interrupts: false, same_75_turn_caller_trace: true }, caller_trace: callerTrace };
+const report = { endpoint, controls: { provider: 'gpt-4o-mini', temperature: 0, team_model_overrides: false, global_interrupts: false, same_75_turn_caller_trace: true, request_timeout_ms: requestTimeoutMs }, caller_trace: callerTrace };
 for (const [key, [name, configure]] of Object.entries(variants)) {
   if (!selectedVariants.has(key)) continue;
   const results = await runVariant(name, configure(), callerTrace);
   report[key === 'deferred' ? 'team_deferred' : key === 'structured' ? 'team_structured_deferred' : key] = { summary: summarise(results), results };
+  // Preserve completed variants if a later provider call times out or the
+  // evaluator is interrupted. This is especially useful for long live runs.
+  if (process.env.REPORT_PATH) await fs.writeFile(process.env.REPORT_PATH, `${JSON.stringify(report, null, 2)}\n`);
 }
 if (process.env.REPORT_PATH) await fs.writeFile(process.env.REPORT_PATH, `${JSON.stringify(report, null, 2)}\n`);
 console.log(JSON.stringify({ controls: report.controls, caller_turns: callerTrace.length, summaries: Object.fromEntries(Object.entries(report).filter(([, value]) => value?.summary).map(([key, value]) => [key, value.summary])) }, null, 2));

@@ -1,6 +1,7 @@
 import { callTool } from './tool_client.js';
 
 const MAX_TOOL_PASSES = 5;
+const PROVIDER_TIMEOUT_MS = Number(process.env.PROVIDER_TIMEOUT_MS || 30000);
 const ALLOWED_PROVIDER_URLS = new Set([
   'https://api.openai.com/v1/chat/completions',
   'https://api.x.ai/v1/chat/completions'
@@ -203,7 +204,7 @@ async function providerCompletion(agent, messages, tools, toolChoice = 'auto', u
   if (!ALLOWED_PROVIDER_URLS.has(agent.url)) throw new Error(`Provider URL is not allowlisted: ${agent.url}`);
   const body = { ...agent.params, messages, tools, tool_choice: toolChoice, stream: false };
   if (useResponseSidecar && agent.handoff_protocol?.mode === 'response_sidecar') body.response_format = { type: 'json_object' };
-  const response = await fetch(agent.url, { method: 'POST', headers: { authorization: `Bearer ${agent.api_key}`, 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  const response = await fetch(agent.url, { method: 'POST', headers: { authorization: `Bearer ${agent.api_key}`, 'content-type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS) });
   const payload = await response.json();
   if (!response.ok) {
     const detail = payload?.error?.message || payload?.message || JSON.stringify(payload).slice(0, 500);
