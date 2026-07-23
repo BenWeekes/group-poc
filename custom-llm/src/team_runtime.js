@@ -85,6 +85,7 @@ export function scopedFunctions(session, secrets) {
   const result = [];
   const names = new Set();
   for (const name of agent.tools || []) {
+    if (name === 'verify_right_party' && session.variables.right_party_verified) continue;
     const tool = library.get(name);
     if (!tool || tool.type === 'system') continue;
     result.push({ type: 'function', function: { name, description: tool.description || name, parameters: tool.parameters || { type: 'object', properties: {} } } });
@@ -177,10 +178,10 @@ export function boundedHistory(history, maxHistory) {
   while (start > 0 && history[start]?.role === 'tool') start -= 1;
   return history.slice(start);
 }
-async function providerCompletion(agent, messages, tools, toolChoice = 'auto') {
+async function providerCompletion(agent, messages, tools, toolChoice = 'auto', useResponseSidecar = true) {
   if (!ALLOWED_PROVIDER_URLS.has(agent.url)) throw new Error(`Provider URL is not allowlisted: ${agent.url}`);
   const body = { ...agent.params, messages, tools, tool_choice: toolChoice, stream: false };
-  if (agent.handoff_protocol?.mode === 'response_sidecar') body.response_format = { type: 'json_object' };
+  if (useResponseSidecar && agent.handoff_protocol?.mode === 'response_sidecar') body.response_format = { type: 'json_object' };
   const response = await fetch(agent.url, { method: 'POST', headers: { authorization: `Bearer ${agent.api_key}`, 'content-type': 'application/json' }, body: JSON.stringify(body) });
   const payload = await response.json();
   if (!response.ok) {
@@ -221,7 +222,8 @@ export async function runTeamTurn(session, userText) {
       ? { type: 'function', function: { name: 'verify_right_party' } }
       : 'auto';
     const started = performance.now();
-    const response = await providerCompletion(agent, messages, tools, toolChoice);
+    const useResponseSidecar = agent.handoff_protocol?.mode !== 'response_sidecar' || session.variables.right_party_verified || !tools.some((tool) => tool.function.name === 'verify_right_party');
+    const response = await providerCompletion(agent, messages, tools, toolChoice, useResponseSidecar);
     const latencyMs = Number((performance.now() - started).toFixed(2));
     const choice = response.choices?.[0]?.message || {};
     const turnUsage = response.usage || {};
@@ -242,16 +244,20 @@ export async function runTeamTurn(session, userText) {
     };
     trace.push(traceEntry);
     if (!choice.tool_calls?.length) {
-      const sidecar = sidecarResponse(choice, agent);
+      const sidecar = useResponseSidecar ? sidecarResponse(choice, agent) : null;
       if (sidecar?.handoff) {
         const { to, activation, capture = {} } = sidecar.handoff;
         if (activation !== 'next_user_turn') throw new Error('Response-sidecar handoff activation must be next_user_turn');
         const handoff = (agent.handoffs || []).find((item) => item.to === to);
         if (!handoff || handoff.activation !== 'next_user_turn') throw new Error(`Response-sidecar destination is not configured for deferred handoff: ${to}`);
-        const result = await executeTeamTool(session, `handoff_to_${to}`, capture, secrets, { transitionMessage: sidecar.content });
+        const completeCapture = { ...capture };
+        for (const field of handoff.capture?.required || []) {
+          if ((completeCapture[field] === undefined || completeCapture[field] === '') && session.variables[field] !== undefined) completeCapture[field] = session.variables[field];
+        }
+        const result = await executeTeamTool(session, `handoff_to_${to}`, completeCapture, secrets, { transitionMessage: sidecar.content });
         if (!result.scheduled) throw new Error(`Response-sidecar handoff was not scheduled: ${to}`);
-        traceEntry.response_sidecar_handoff = { destination: to, activation, capture_keys: Object.keys(capture) };
-        session.history.push({ role: 'assistant', content: sidecar.content, group_poc: { handoff: { from: agent.name, to, activation, capture } } });
+        traceEntry.response_sidecar_handoff = { destination: to, activation, capture_keys: Object.keys(completeCapture) };
+        session.history.push({ role: 'assistant', content: sidecar.content, group_poc: { handoff: { from: agent.name, to, activation, capture: completeCapture } } });
         return { content: sidecar.content, activeAgent: session.activeAgent, usage, trace, variables: session.variables, pendingHandoff: session.pendingHandoff };
       }
       const content = sidecar?.content || choice.content || agent.failure_message || 'Sorry, something went wrong.';

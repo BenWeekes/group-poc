@@ -80,7 +80,7 @@ Deferred handoffs require a fixed, destination-appropriate `transition_message`.
 }
 ```
 
-### Response-sidecar protocol
+### Structured Deferred Handoff (`response_sidecar`)
 
 An agent can declare `"handoff_protocol": { "mode": "response_sidecar" }` when its declared handoffs are deferred. The Custom LLM then requests a structured upstream response with `content` and an optional `handoff`, rather than exposing `handoff_to_*` functions. It speaks only `content`, validates and persists the hidden handoff, and activates the destination on the next caller utterance. This removes function-schema and tool-loop overhead but does not remove the source model call that chooses the destination.
 

@@ -86,3 +86,10 @@ test('response-sidecar defers a handoff without exposing a handoff function', as
     assert.equal(session.history.at(-1).group_poc.handoff.to, 'payment_options');
   } finally { globalThis.fetch = originalFetch; }
 });
+
+test('verified intake no longer sees the verification function', () => {
+  const llm = { agents: [{ name: 'intake', tools: ['verify_right_party'], handoffs: [] }], tools: [{ name: 'verify_right_party', type: 'rest', parameters: { type: 'object' } }] };
+  const session = createTeamSession({ call_id: 'verified-tool-scope' }, llm);
+  session.variables.right_party_verified = true;
+  assert.equal(scopedFunctions(session, {}).some((tool) => tool.function.name === 'verify_right_party'), false);
+});

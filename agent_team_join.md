@@ -49,7 +49,7 @@ For a known next question, a handoff can defer activation without another provid
 
 The runtime records the handoff tool call, its capture, and the fixed transition message in the shared history, then sets `payment_options` as the active agent. That agent receives the caller's answer on the next turn. Use immediate handoff where the current utterance requires specialist reasoning or a specialist tool now.
 
-### Response-sidecar deferred handoff
+### Structured Deferred Handoff (`response_sidecar`)
 
 For an agent whose configured handoffs are all deferred, `handoff_protocol` can avoid an LLM function call entirely. The source model emits a structured response; ConvoAI speaks only `content` and keeps `handoff` as internal session metadata.
 

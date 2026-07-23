@@ -1,6 +1,14 @@
 import fs from 'node:fs/promises';
 import { createEmulator, loadProfile, nextCallerUtterance } from './transcript_user_emulator.js';
 
+process.on('uncaughtException', async (error) => {
+  if (process.env.REPORT_PATH) {
+    await fs.writeFile(process.env.REPORT_PATH, `${JSON.stringify({ fatal_error: error.message, stack: error.stack }, null, 2)}\n`);
+  }
+  console.error(error);
+  process.exit(1);
+});
+
 const endpoint = process.env.CUSTOM_LLM_URL || 'https://sa-dev.agora.io/group-poc/llm/chat/completions';
 const profileNames = ['employee_a_1', 'employee_a_2', 'employee_b_1', 'employee_b_2'];
 const teamTemplate = JSON.parse(await fs.readFile(new URL('./debt_recovery_team_llm.json', import.meta.url), 'utf8'));
@@ -33,6 +41,14 @@ function configuredDeferredTeam() {
       }
     }
   }
+  return llm;
+}
+function configuredStructuredDeferredTeam() {
+  const llm = configuredDeferredTeam();
+  // Intake has one outgoing, deferred path, making it a clean real-provider
+  // test of response-sidecar without changing urgent specialist handoffs.
+  const intake = llm.agents.find((agent) => agent.name === 'outbound_intake');
+  intake.handoff_protocol = { mode: 'response_sidecar' };
   return llm;
 }
 function configuredMonolithic() {
@@ -152,6 +168,7 @@ function summarise(results) {
     provider_passes: passes.length,
     handoffs: passes.reduce((sum, pass) => sum + (pass.tool_calls || []).filter((tool) => tool.startsWith('handoff_to_')).length, 0),
     deferred_handoffs: passes.filter((pass) => pass.deferred_handoff).length,
+    structured_deferred_handoffs: passes.filter((pass) => pass.response_sidecar_handoff).length,
     total_provider_tokens: results.reduce((sum, item) => sum + Number(item.usage.total_tokens || 0), 0),
     average_provider_input_tokens_per_pass: average(passes.map((pass) => Number(pass.prompt_tokens || 0))),
     average_input_character_count_per_pass: average(passes.map((pass) => Number(pass.input_character_count || 0))),
@@ -167,9 +184,18 @@ const callerTrace = process.env.CALLER_TRACE_PATH
   : await generateCallerTrace();
 if (callerTrace.length !== 75) throw new Error(`Expected 75 caller turns, generated ${callerTrace.length}`);
 if (process.env.TRACE_OUTPUT_PATH) await fs.writeFile(process.env.TRACE_OUTPUT_PATH, `${JSON.stringify({ caller_trace: callerTrace }, null, 2)}\n`);
-const teamResults = await runVariant('team', configuredTeam(), callerTrace);
-const deferredTeamResults = await runVariant('team-deferred', configuredDeferredTeam(), callerTrace);
-const monolithicResults = await runVariant('monolithic', configuredMonolithic(), callerTrace);
-const report = { endpoint, controls: { provider: 'gpt-4o-mini', temperature: 0, team_model_overrides: false, global_interrupts: false, same_75_turn_caller_trace: true }, caller_trace: callerTrace, team: { summary: summarise(teamResults), results: teamResults }, team_deferred: { summary: summarise(deferredTeamResults), results: deferredTeamResults }, monolithic: { summary: summarise(monolithicResults), results: monolithicResults } };
+const selectedVariants = new Set((process.env.EVAL_VARIANTS || 'team,deferred,structured,monolithic').split(',').map((value) => value.trim()));
+const variants = {
+  team: ['team', configuredTeam],
+  deferred: ['team-deferred', configuredDeferredTeam],
+  structured: ['team-structured-deferred', configuredStructuredDeferredTeam],
+  monolithic: ['monolithic', configuredMonolithic]
+};
+const report = { endpoint, controls: { provider: 'gpt-4o-mini', temperature: 0, team_model_overrides: false, global_interrupts: false, same_75_turn_caller_trace: true }, caller_trace: callerTrace };
+for (const [key, [name, configure]] of Object.entries(variants)) {
+  if (!selectedVariants.has(key)) continue;
+  const results = await runVariant(name, configure(), callerTrace);
+  report[key === 'deferred' ? 'team_deferred' : key === 'structured' ? 'team_structured_deferred' : key] = { summary: summarise(results), results };
+}
 if (process.env.REPORT_PATH) await fs.writeFile(process.env.REPORT_PATH, `${JSON.stringify(report, null, 2)}\n`);
-console.log(JSON.stringify({ controls: report.controls, caller_turns: callerTrace.length, team: report.team.summary, team_deferred: report.team_deferred.summary, monolithic: report.monolithic.summary }, null, 2));
+console.log(JSON.stringify({ controls: report.controls, caller_turns: callerTrace.length, summaries: Object.fromEntries(Object.entries(report).filter(([, value]) => value?.summary).map(([key, value]) => [key, value.summary])) }, null, 2));
