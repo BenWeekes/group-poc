@@ -110,7 +110,7 @@ The primary same-model benchmark now uses 75 source-derived caller turns across 
 
 The team averaged **925 actual provider input tokens per pass** versus **1,305** for the single prompt (**29.1% lower**), with **2.0** visible tool schemas versus **10.0**. Total provider tokens were **22.4% lower**. History size was nearly identical (19.4 versus 19.2 messages), so the reduction comes from scoped prompts and tools, not simply dropping more conversation.
 
-Reliability was worse in this first long run: expected-action coverage was 60% for the team and 90% for the single prompt. The main defect is concrete and fixable: after a WeChat/QQ report, Safety & Compliance remains terminal and cannot issue a later official follow-up or honour a later contact-preference request. The team also averaged 2,038 ms per caller turn versus 1,549 ms because 15 handoffs produced seven extra provider passes. These are pre-template-deferred baseline figures; a fresh three-way replay is required before using them as current results. The detailed record is in [important_runs.md](custom-llm/evals/important_runs.md).
+The latest fixed-trace comparison evaluates Single Prompt, Immediate Handoff, and Template Deferred Handoff side by side. It shows lower context and tool exposure for teams, while the single prompt retains the best same-turn action coverage in this run. See the current tables and controls in [important_runs.md](custom-llm/evals/important_runs.md).
 
 ## Next evaluation steps
 

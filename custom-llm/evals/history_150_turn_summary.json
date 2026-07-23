@@ -1,48 +1,52 @@
 {
-  "date": "2026-07-22",
-  "description": "Curated summary of the same-model 75-caller-turn / 150-dialogue-message replay. Raw per-turn report stays outside Git.",
+  "date": "2026-07-23",
+  "description": "Latest completed same-model, fixed-trace three-way comparison. Raw per-turn provider traces stay outside Git.",
   "controls": {
     "provider": "gpt-4o-mini",
     "temperature": 0,
-    "team_specialist_model_overrides": false,
     "global_interrupts": false,
-    "same_75_turn_caller_trace": true
-  },
-  "caller_turns_by_source_profile": {
-    "employee_a_1": 18,
-    "employee_a_2": 18,
-    "employee_b_1": 18,
-    "employee_b_2": 21
-  },
-  "team": {
-    "dialogue_messages": 150,
-    "http_success_rate": 1,
-    "expected_action_coverage": 0.6,
-    "logic_error_count": 4,
-    "tool_execution_errors": 0,
-    "provider_passes": 126,
-    "handoffs": 15,
-    "total_provider_tokens": 122727,
-    "average_provider_input_tokens_per_pass": 925.14,
-    "average_history_messages_per_pass": 19.43,
-    "average_tool_schemas_per_pass": 2.01,
-    "average_wall_latency_ms_per_caller_turn": 2037.75,
-    "average_provider_latency_ms_per_pass": 1208.86
+    "same_75_turn_caller_trace": true,
+    "caller_turns": 75,
+    "dialogue_messages": 150
   },
   "single_prompt": {
-    "dialogue_messages": 150,
     "http_success_rate": 1,
     "expected_action_coverage": 0.9,
-    "logic_error_count": 1,
+    "logic_error_count": 3,
     "tool_execution_errors": 0,
     "provider_passes": 119,
-    "handoffs": 0,
-    "total_provider_tokens": 158099,
-    "average_provider_input_tokens_per_pass": 1305.08,
-    "average_history_messages_per_pass": 19.16,
+    "total_provider_tokens": 159427,
+    "average_provider_input_tokens_per_pass": 1315.79,
     "average_tool_schemas_per_pass": 10,
-    "average_wall_latency_ms_per_caller_turn": 1549.2,
-    "average_provider_latency_ms_per_pass": 972.65
+    "average_wall_latency_ms_per_caller_turn": 1276.26,
+    "average_provider_latency_ms_per_pass": 801.1
   },
-  "finding": "The team reduced actual input tokens and tool context, but Safety & Compliance was terminal after a side-channel report and prevented later official-follow-up/contact-preference actions."
+  "immediate_handoff": {
+    "http_success_rate": 0.9867,
+    "expected_action_coverage": 0.7,
+    "logic_error_count": 3,
+    "tool_execution_errors": 0,
+    "provider_passes": 126,
+    "handoffs": 16,
+    "total_provider_tokens": 131348,
+    "average_provider_input_tokens_per_pass": 995.14,
+    "average_tool_schemas_per_pass": 2.48,
+    "average_wall_latency_ms_per_caller_turn": 1797.91,
+    "average_provider_latency_ms_per_pass": 1037.94
+  },
+  "template_deferred_handoff": {
+    "http_success_rate": 1,
+    "expected_action_coverage_same_turn": 0.4,
+    "expected_action_coverage_within_3_following_caller_turns": 0.7,
+    "logic_error_count": 6,
+    "tool_execution_errors": 2,
+    "provider_passes": 114,
+    "handoffs": 21,
+    "deferred_handoffs": 8,
+    "total_provider_tokens": 104624,
+    "average_provider_input_tokens_per_pass": 879.54,
+    "average_tool_schemas_per_pass": 2.04,
+    "average_wall_latency_ms_per_caller_turn": 1444.16,
+    "average_provider_latency_ms_per_pass": 947
+  }
 }
