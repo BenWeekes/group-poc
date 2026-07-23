@@ -27,6 +27,8 @@ This reveals tool/prompt/handoff gaps that fixed replay alone can miss. Record s
 
 ## Team versus single-prompt baseline
 
+The 150-message three-way run below is the canonical comparison. `eval:compare` and `eval:complex-compare` are supplementary functional regressions.
+
 `eval:compare` runs the same 28 replay turns through the team fixture and a one-agent fixture with the full prompt and all ten tools. The baseline is deliberately a single team-runtime agent so both variants use the same endpoint, tool service, SSE mode, session handling, and provider API. `TEAM_FORCE_ROOT_PROVIDER=true` removes agent-level provider overrides for an architecture-only run.
 
 `team_comparison.md` records the latest completed three-way GPT-4o-mini run: Single Prompt, Immediate Handoff, and Template Deferred Handoff. It reports lower team context/tool exposure, but does not establish that teams are more accurate or faster overall. Treat it as reproducible POC evidence, not a production conclusion.

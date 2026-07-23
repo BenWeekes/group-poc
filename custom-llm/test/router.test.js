@@ -203,6 +203,24 @@ test('malformed response-sidecar output fails soft without a 500', async () => {
   } finally { globalThis.fetch = originalFetch; }
 });
 
+test('tool-loop exhaustion returns the configured failure message', async () => {
+  const llm = {
+    url: 'https://api.openai.com/v1/chat/completions', api_key: 'test', params: { model: 'gpt-4o-mini' },
+    failure_message: 'I need to get someone to help with that.',
+    agents: [{ name: 'intake', system_messages: [], tools: [], handoffs: [] }]
+  };
+  const session = createTeamSession({ call_id: 'tool-loop-limit' }, llm);
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({ ok: true, json: async () => ({ choices: [{ message: { role: 'assistant', content: null, tool_calls: [{ id: 'unknown-tool', type: 'function', function: { name: 'unknown_tool', arguments: '{}' } }] } }], usage: {} }) });
+  try {
+    const output = await runTeamTurn(session, 'Please help.');
+    assert.equal(output.content, 'I need to get someone to help with that.');
+    assert.equal(output.toolLoopExhausted, true);
+    assert.equal(output.trace.length, 5);
+    assert.equal(output.trace.at(-1).tool_loop_exhausted, true);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
 test('verified intake no longer sees the verification function', () => {
   const llm = { agents: [{ name: 'intake', tools: ['verify_right_party'], handoffs: [] }], tools: [{ name: 'verify_right_party', type: 'rest', parameters: { type: 'object' } }] };
   const session = createTeamSession({ call_id: 'verified-tool-scope' }, llm);

@@ -94,7 +94,8 @@ export function createApp() {
         trace: output.trace,
         variables: output.variables,
         activated_deferred_handoff: output.activatedDeferredHandoff || null,
-        pending_deferred_handoff: output.pendingHandoff || null
+        pending_deferred_handoff: output.pendingHandoff || null,
+        tool_loop_exhausted: Boolean(output.toolLoopExhausted)
       });
     }
     const session = sessionFor(req.body.context); const text = latestUser(req.body.messages);

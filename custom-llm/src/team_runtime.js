@@ -319,5 +319,17 @@ export async function runTeamTurn(session, userText) {
       return { content, activeAgent: session.activeAgent, usage, trace, variables: session.variables, pendingHandoff: session.pendingHandoff, activatedDeferredHandoff };
     }
   }
-  throw new Error(`Tool loop exceeded ${MAX_TOOL_PASSES} passes`);
+  const agent = effectiveAgent(session, secrets);
+  const content = agent.failure_message || 'Sorry, something went wrong.';
+  trace.at(-1).tool_loop_exhausted = true;
+  session.history.push({ role: 'assistant', content });
+  return {
+    content,
+    activeAgent: session.activeAgent,
+    usage,
+    trace,
+    variables: session.variables,
+    activatedDeferredHandoff,
+    toolLoopExhausted: true
+  };
 }

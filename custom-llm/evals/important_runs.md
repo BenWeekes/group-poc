@@ -52,7 +52,7 @@ The machine-readable summary is [history_150_turn_summary.json](history_150_turn
 
 ## Runtime contract regression
 
-`npm test` has 14 passing tests. It covers bounded history, provider-history sanitisation, deferred/global handoff rules, deferred activation over two HTTP requests, sidecar graceful fallback, and tool scoping after verification.
+`npm test` has 15 passing tests. It covers bounded history, provider-history sanitisation, deferred/global handoff rules, deferred activation over two HTTP requests, sidecar graceful fallback, tool-loop fallback, and tool scoping after verification.
 
 ## Reproducing the main comparison
 
