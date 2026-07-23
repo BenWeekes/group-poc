@@ -11,7 +11,7 @@
 | Language | JavaScript (Node.js + Express), JSON, Docker Compose |
 | Deploy Target | Docker on Agora development server; narrow Nginx prefix |
 | Owner | Agora conversational AI experimentation |
-| Last Reviewed | 2026-07-22 |
+| Last Reviewed | 2026-07-23 |
 
 ## L1 — Summaries
 

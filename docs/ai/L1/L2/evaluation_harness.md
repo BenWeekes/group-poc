@@ -7,7 +7,7 @@
 | Layer | Command | Demonstrates | Does not demonstrate |
 | --- | --- | --- | --- |
 | Unit/router | `npm test`, `npm run eval` | deterministic intents and legacy metrics | provider tool quality |
-| Team smoke | `npm run eval:team` | full team configuration, captures, tools, mixed providers | long-call consistency |
+| Team smoke | `npm run eval:team` | full team configuration, captures, tools, and handoffs | long-call consistency |
 | Engine replay | `npm run eval:engine-replay` | engine-shaped public requests with full `llm` and SSE | exact original audio transcription |
 | Simulated caller | `npm run eval:simulated-caller` | adaptive counterpart using an independent caller LLM | real-caller or production quality |
 

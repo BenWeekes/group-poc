@@ -8,7 +8,7 @@
 
 ## Agent resolution
 
-`effectiveAgent` combines root defaults with selected-agent overrides. `params` merges; other agent fields replace root fields. Secret and variable templates are resolved only inside the Custom LLM process. `requires` blocks activation with absent state. The runtime rebuilds prompt, history, and functions for every provider call.
+`effectiveAgent` combines root defaults with selected-agent overrides. `params` merges; other agent fields replace root fields. Secret and variable templates are resolved only inside the Custom LLM process. `requires` blocks activation with absent state. The runtime rebuilds prompt, history, and functions for every provider call. The proposed `handoff.context` field is not yet applied here; the destination's `max_history` currently bounds shared history.
 
 `boundedHistory` removes a leading `tool` message after slicing history. This keeps an OpenAI-compatible provider from receiving a tool result without its preceding assistant tool call. Before each provider request, the runtime also strips POC-only history annotations and sends only standard message fields.
 

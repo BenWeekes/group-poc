@@ -29,11 +29,14 @@
 | `agent.handoffs` | synthesized transfer functions |
 | `agent.requires` | variables required to activate |
 | `agent.available_from` | `"*"` permits global destination |
+| `handoff.context` | proposed destination conversation context |
 | `handoff.capture` | transfer values written to variables |
 | `handoff.activation` | `immediate` (default) or `next_user_turn` |
 | `handoff.transition_message` | required fixed question/message for a deferred handoff |
 
 `next_user_turn` is reserved for routine routing. A destination with `available_from: "*"` is a global interruption agent and must use immediate activation.
+
+`handoff.context` is part of the proposed Agora contract. The reference implementation currently applies the destination agent's `max_history` to shared history; it does not yet apply a per-handoff context window.
 
 See `docs_llm.md` and `agent_team_join.md` for the full proposal.
 
