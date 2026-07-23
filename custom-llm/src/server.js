@@ -89,7 +89,9 @@ app.post('/chat/completions', async (req, res) => {
         runtime: 'team',
         usage: output.usage,
         trace: output.trace,
-        variables: output.variables
+        variables: output.variables,
+        activated_deferred_handoff: output.activatedDeferredHandoff || null,
+        pending_deferred_handoff: output.pendingHandoff || null
       });
     }
     const session = sessionFor(req.body.context); const text = latestUser(req.body.messages);

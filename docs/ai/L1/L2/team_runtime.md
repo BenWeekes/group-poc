@@ -16,12 +16,18 @@
 
 `scopedFunctions` creates schemas for the selected agent's REST tools, explicit handoffs, and eligible deduplicated `available_from: "*"` destinations. Global schemas are visible only when the current caller text matches their precise criterion. An LLM invokes `handoff_to_<agent>` exactly like a tool. The runtime validates required captures, merges arguments into variables, then changes active agent.
 
+Handoffs default to `activation: "immediate"`: after the handoff tool call, the destination receives a provider pass and answers the current caller utterance. A handoff may instead use `activation: "next_user_turn"` plus a fixed `transition_message`. The runtime persists the source tool call, tool result, and transition message in shared history, speaks that message without another provider call, and makes the destination active for the next caller utterance. The session's `pendingHandoff` marker is cleared when that next turn arrives.
+
+An agent may instead set `handoff_protocol.mode` to `response_sidecar`. Its provider completion uses structured JSON with caller-visible `content` and hidden optional `handoff` metadata. The runtime does not expose explicit handoff function schemas for that agent, validates the destination/capture against its declared deferred handoffs, persists the metadata, and schedules the destination without a tool-loop pass.
+
 ## Turn sequence
 
 ```text
 caller text -> deterministic interrupt -> user history
 -> resolve agent + functions -> provider completion
 -> execute tools/captures/handoffs -> repeat (maximum five passes)
+
+For a deferred handoff, the loop returns immediately after the handoff tool result and configured transition message; the destination starts on the next user turn.
 -> response with trace and usage
 ```
 

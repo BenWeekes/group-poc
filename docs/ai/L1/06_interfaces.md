@@ -30,6 +30,9 @@
 | `agent.requires` | variables required to activate |
 | `agent.available_from` | `"*"` permits global destination |
 | `handoff.capture` | transfer values written to variables |
+| `handoff.activation` | `immediate` (default) or `next_user_turn` |
+| `handoff.transition_message` | required fixed question/message for a deferred handoff |
+| `agent.handoff_protocol` | optional `response_sidecar` structured-output protocol for deferred handoffs |
 
 See `docs_llm.md` and `agent_team_join.md` for the full proposal.
 

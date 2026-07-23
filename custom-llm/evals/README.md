@@ -14,7 +14,7 @@ This directory contains executable fixtures, evaluators, and a small curated his
 | `npm run eval:transcript-user` | `transcript_user_profiles.json` | Preview a history-aware source-derived caller trace |
 | `npm run eval:transcript-user-call` | profile + one `llm` config | Run a history-aware caller against one configuration |
 | `npm run eval:transcript-user-compare` | profile + both configs | Paired adaptive caller runs under same-model controls |
-| `npm run eval:150-turn-compare` | all four profiles + both configs | Primary 75-caller-turn / 150-dialogue-message comparison with per-pass context telemetry |
+| `npm run eval:150-turn-compare` | all four profiles + three configs | Primary 75-caller-turn / 150-dialogue-message comparison: immediate team, deferred-handoff team, and single prompt, with per-pass context telemetry |
 
 ## Important artefacts
 
@@ -26,5 +26,7 @@ This directory contains executable fixtures, evaluators, and a small curated his
 ## Shared controls
 
 Comparative runs should use the same provider/model, temperature, tool service, endpoint, and session shape for both variants. If global runtime safeguards are disabled for an architecture-only comparison, disable them for both variants and state that clearly in the report.
+
+The deferred team uses `activation: "next_user_turn"` for routine transitions with a pre-authored next question. Its tool call and transition message are retained in shared history, but it does not make a second provider pass until the caller answers. Escalations and cases needing an immediate specialist action remain immediate handoffs.
 
 For a repeatable 150-turn rerun across container rebuilds, set `TRACE_OUTPUT_PATH=/app/reports/eval150_trace.json` on the first run, then set `CALLER_TRACE_PATH=/app/reports/eval150_trace.json` on later runs. `reports/` is ignored; commit only the curated summary and observations.

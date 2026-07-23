@@ -16,6 +16,25 @@ function configuredTeam() {
   }
   return llm;
 }
+function configuredDeferredTeam() {
+  const llm = configuredTeam();
+  const deferredTransitions = {
+    'outbound_intake:account_status': 'Thank you. What would you like help with today?',
+    'account_status:payment_options': 'What amount could you realistically pay, and on which date?',
+    'account_status:payment_troubleshooting': 'What happened when you tried to make the payment?',
+    'payment_troubleshooting:payment_options': 'What amount could you realistically pay, and on which date?'
+  };
+  for (const agent of llm.agents) {
+    for (const handoff of agent.handoffs || []) {
+      const transitionMessage = deferredTransitions[`${agent.name}:${handoff.to}`];
+      if (transitionMessage) {
+        handoff.activation = 'next_user_turn';
+        handoff.transition_message = transitionMessage;
+      }
+    }
+  }
+  return llm;
+}
 function configuredMonolithic() {
   const llm = structuredClone(monolithicTemplate);
   llm.enable_global_interrupts = false;
@@ -29,6 +48,13 @@ function parseSse(text) {
     if (data && data !== '[DONE]') return JSON.parse(data);
   }
   throw new Error('No JSON SSE event returned');
+}
+function parseResponse(text) {
+  try { return parseSse(text); }
+  catch {
+    try { return JSON.parse(text); }
+    catch { return { error: { message: `Unparseable response: ${text.slice(0, 200)}` } }; }
+  }
 }
 function expectedTool(profile, beat) {
   const key = `${profile}:${beat}`;
@@ -78,8 +104,15 @@ async function runVariant(name, llm, callerTrace) {
       context = { appId: 'group-poc', userId: `eval150-${name}-${activeProfile}`, channel: `eval150-${name}-${activeProfile}`, call_id: `eval150-${Date.now()}-${name}-${activeProfile}`, dialed_phone: '+441632960123' };
     }
     const started = performance.now();
-    const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json', 'x-group-poc-api-key': process.env.GROUP_POC_API_KEY || '' }, body: JSON.stringify({ model: 'gpt-4o-mini', llm, context, messages: [{ role: 'user', content: item.caller }], stream: true }) });
-    const body = parseSse(await response.text());
+    let response;
+    let body;
+    try {
+      response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json', 'x-group-poc-api-key': process.env.GROUP_POC_API_KEY || '' }, body: JSON.stringify({ model: 'gpt-4o-mini', llm, context, messages: [{ role: 'user', content: item.caller }], stream: true }) });
+      body = parseResponse(await response.text());
+    } catch (error) {
+      response = { status: 599 };
+      body = { error: { message: error.message } };
+    }
     const trace = body.group_poc?.trace || [];
     const tools = trace.flatMap((pass) => pass.tool_calls || []);
     const expected = expectedTool(item.profile, item.beat);
@@ -98,11 +131,19 @@ function summarise(results) {
   const passes = results.flatMap((item) => item.trace || []);
   const expected = results.filter((item) => item.expected_tool);
   const toolErrors = passes.flatMap((pass) => pass.tool_errors || []);
+  // A next_user_turn handoff deliberately moves the destination tool action to
+  // the caller's next response. Score that separately from same-turn coverage.
+  const delayedExpected = expected.map((item) => {
+    const index = results.indexOf(item);
+    const window = results.slice(index, index + 4).filter((candidate) => candidate.profile === item.profile);
+    return window.some((candidate) => candidate.tools.includes(item.expected_tool));
+  });
   return {
     caller_turns: results.length,
     dialogue_messages: results.length * 2,
     http_success_rate: results.filter((item) => item.http_status < 400).length / results.length,
     expected_action_coverage: expected.filter((item) => item.expected_tool_called).length / expected.length,
+    expected_action_coverage_within_3_following_caller_turns: delayedExpected.filter(Boolean).length / delayedExpected.length,
     logic_error_count: results.filter((item) => !item.expected_tool_called || item.forbidden_tools_called.length || item.verification_extra_tool).length,
     missing_expected_actions: results.filter((item) => !item.expected_tool_called).length,
     forbidden_tool_calls: results.reduce((sum, item) => sum + item.forbidden_tools_called.length, 0),
@@ -110,6 +151,7 @@ function summarise(results) {
     tool_execution_errors: toolErrors.length,
     provider_passes: passes.length,
     handoffs: passes.reduce((sum, pass) => sum + (pass.tool_calls || []).filter((tool) => tool.startsWith('handoff_to_')).length, 0),
+    deferred_handoffs: passes.filter((pass) => pass.deferred_handoff).length,
     total_provider_tokens: results.reduce((sum, item) => sum + Number(item.usage.total_tokens || 0), 0),
     average_provider_input_tokens_per_pass: average(passes.map((pass) => Number(pass.prompt_tokens || 0))),
     average_input_character_count_per_pass: average(passes.map((pass) => Number(pass.input_character_count || 0))),
@@ -126,7 +168,8 @@ const callerTrace = process.env.CALLER_TRACE_PATH
 if (callerTrace.length !== 75) throw new Error(`Expected 75 caller turns, generated ${callerTrace.length}`);
 if (process.env.TRACE_OUTPUT_PATH) await fs.writeFile(process.env.TRACE_OUTPUT_PATH, `${JSON.stringify({ caller_trace: callerTrace }, null, 2)}\n`);
 const teamResults = await runVariant('team', configuredTeam(), callerTrace);
+const deferredTeamResults = await runVariant('team-deferred', configuredDeferredTeam(), callerTrace);
 const monolithicResults = await runVariant('monolithic', configuredMonolithic(), callerTrace);
-const report = { endpoint, controls: { provider: 'gpt-4o-mini', temperature: 0, team_model_overrides: false, global_interrupts: false, same_75_turn_caller_trace: true }, caller_trace: callerTrace, team: { summary: summarise(teamResults), results: teamResults }, monolithic: { summary: summarise(monolithicResults), results: monolithicResults } };
+const report = { endpoint, controls: { provider: 'gpt-4o-mini', temperature: 0, team_model_overrides: false, global_interrupts: false, same_75_turn_caller_trace: true }, caller_trace: callerTrace, team: { summary: summarise(teamResults), results: teamResults }, team_deferred: { summary: summarise(deferredTeamResults), results: deferredTeamResults }, monolithic: { summary: summarise(monolithicResults), results: monolithicResults } };
 if (process.env.REPORT_PATH) await fs.writeFile(process.env.REPORT_PATH, `${JSON.stringify(report, null, 2)}\n`);
-console.log(JSON.stringify({ controls: report.controls, caller_turns: callerTrace.length, team: report.team.summary, monolithic: report.monolithic.summary }, null, 2));
+console.log(JSON.stringify({ controls: report.controls, caller_turns: callerTrace.length, team: report.team.summary, team_deferred: report.team_deferred.summary, monolithic: report.monolithic.summary }, null, 2));

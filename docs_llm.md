@@ -60,6 +60,43 @@ A handoff is exposed to the current LLM as a synthesized function. The caller ex
 
 The runtime must validate the capture schema before switching agents. It must reject a transfer when a required capture is missing or malformed.
 
+### Handoff activation
+
+`activation` selects when the destination agent starts generating. It defaults to `"immediate"` for compatibility.
+
+| Value | Sequence | Use it when |
+| --- | --- | --- |
+| `"immediate"` | Current agent calls the handoff; destination generates the reply to the current caller utterance. | The caller needs specialist knowledge, a specialist tool, or escalation now. |
+| `"next_user_turn"` | Current agent calls the handoff; ConvoAI speaks the configured `transition_message`, records the handoff in shared history, and activates the destination for the next caller utterance. | The destination has a known first question and no specialist action is needed until the caller answers. |
+
+Deferred handoffs require a fixed, destination-appropriate `transition_message`. It is runtime-authored configuration, not model-generated content, so it does not require another provider pass. The handoff tool call, its capture, and the spoken transition message remain in the shared conversation history.
+
+```json
+{
+  "to": "payment_options",
+  "activation": "next_user_turn",
+  "transition_message": "What amount could you realistically pay, and on which date?",
+  "description": "Caller asks for an approved payment option or more time."
+}
+```
+
+### Response-sidecar protocol
+
+An agent can declare `"handoff_protocol": { "mode": "response_sidecar" }` when its declared handoffs are deferred. The Custom LLM then requests a structured upstream response with `content` and an optional `handoff`, rather than exposing `handoff_to_*` functions. It speaks only `content`, validates and persists the hidden handoff, and activates the destination on the next caller utterance. This removes function-schema and tool-loop overhead but does not remove the source model call that chooses the destination.
+
+```json
+{
+  "content": "What amount could you realistically pay, and on which date?",
+  "handoff": {
+    "to": "payment_options",
+    "activation": "next_user_turn",
+    "capture": { "intent": "payment_arrangement" }
+  }
+}
+```
+
+This is an internal Custom LLM response schema, never text delivered to the caller. The runtime permits only destinations declared by the source agent and only `next_user_turn` activation. Immediate transfer remains a normal handoff function because the destination must generate the current reply.
+
 `available_from: "*"` makes a destination globally reachable, but it must not mean “always transfer here.” The runtime may expose a global handoff only when the current caller turn matches its stated criterion; critical global intents should also be intercepted deterministically before a model chooses a function.
 
 ## Tool definition
@@ -102,7 +139,7 @@ The platform must enforce outbound calling windows, contact-frequency limits, an
 
 ## Custom LLM compatibility
 
-For this POC, Agora calls an OpenAI-compatible endpoint at `/chat/completions` with `x-group-poc-api-key`. To enable the team runtime, the request additionally supplies the fully populated `llm` object proposed in `agent_team_join.md`. The Custom LLM stores the active agent and variables by session context, resolves root/agent inheritance on every turn, renders `{{vars.*}}` and `{{secrets.*}}` templates, and rebuilds the selected agent's system prompt and allowed function schema after every handoff. A unique `context.call_id` is required in a production integration; the POC expires inactive sessions after 30 minutes by default.
+For this POC, Agora calls an OpenAI-compatible endpoint at `/chat/completions` with `x-group-poc-api-key`. To enable the team runtime, the request additionally supplies the fully populated `llm` object proposed in `agent_team_join.md`. The Custom LLM stores the active agent, pending deferred handoff, variables, and full shared conversation history by session context. It resolves root/agent inheritance on every turn, renders `{{vars.*}}` and `{{secrets.*}}` templates, and rebuilds the selected agent's system prompt and allowed function schema after every handoff. A unique `context.call_id` is required in a production integration; the POC expires inactive sessions after 30 minutes by default.
 
 `{{secrets.openai}}` and `{{secrets.xai}}` resolve only inside the Custom LLM process from its environment. They never enter model context, tool results, logs, or the response payload. Team provider URLs are allowlisted to the OpenAI and xAI chat-completions endpoints, preventing a caller-supplied configuration from sending resolved credentials elsewhere. Agent-level provider overrides can therefore use OpenAI or xAI while remaining inside one Agora session.
 
